@@ -247,7 +247,12 @@ export const useResumeStore = create<CVStore>()(
             activeCvId: 'cv-1',
 
             get resume() {
-                return getActiveResume({ cvList: get().cvList, activeCvId: get().activeCvId });
+                const state = get();
+                // During hydration, state may not be fully initialized
+                if (!state || !state.cvList) {
+                    return emptyResume;
+                }
+                return getActiveResume({ cvList: state.cvList, activeCvId: state.activeCvId });
             },
 
             createCV: (name, linkedInUrl) => {
@@ -465,7 +470,26 @@ export const useResumeStore = create<CVStore>()(
                     cvList: updateActiveResume(state, () => emptyResume),
                 })),
         }),
-        { name: 'cv-storage' }
+        {
+            name: 'cv-storage',
+            version: 1,
+            partialize: (state) => ({
+                cvList: state.cvList,
+                activeCvId: state.activeCvId,
+            }),
+            merge: (persistedState, currentState) => {
+                // If we have persisted state, use it entirely (don't merge with defaults)
+                if (persistedState && typeof persistedState === 'object') {
+                    const persisted = persistedState as { cvList?: CVFile[]; activeCvId?: string | null };
+                    return {
+                        ...currentState,
+                        cvList: persisted.cvList ?? currentState.cvList,
+                        activeCvId: persisted.activeCvId ?? currentState.activeCvId,
+                    };
+                }
+                return currentState;
+            },
+        }
     )
 );
 

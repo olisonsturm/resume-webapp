@@ -88,7 +88,12 @@ export const useLetterStore = create<LetterStore>()(
             activeLetterId: null,
 
             get letter() {
-                return getActiveLetter({ letterList: get().letterList, activeLetterId: get().activeLetterId });
+                const state = get();
+                // During hydration, state may not be fully initialized
+                if (!state || !state.letterList) {
+                    return emptyLetter;
+                }
+                return getActiveLetter({ letterList: state.letterList, activeLetterId: state.activeLetterId });
             },
 
             createLetter: (name) => {
@@ -192,7 +197,26 @@ export const useLetterStore = create<LetterStore>()(
                     letterList: updateActiveLetter(state, () => emptyLetter),
                 })),
         }),
-        { name: 'letter-storage' }
+        {
+            name: 'letter-storage',
+            version: 1,
+            partialize: (state) => ({
+                letterList: state.letterList,
+                activeLetterId: state.activeLetterId,
+            }),
+            merge: (persistedState, currentState) => {
+                // If we have persisted state, use it entirely
+                if (persistedState && typeof persistedState === 'object') {
+                    const persisted = persistedState as { letterList?: LetterFile[]; activeLetterId?: string | null };
+                    return {
+                        ...currentState,
+                        letterList: persisted.letterList ?? currentState.letterList,
+                        activeLetterId: persisted.activeLetterId ?? currentState.activeLetterId,
+                    };
+                }
+                return currentState;
+            },
+        }
     )
 );
 
