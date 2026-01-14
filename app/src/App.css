@@ -1,0 +1,84 @@
+.app {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-6);
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.navbar-brand h1 {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Spin animation for loading */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Main Content - Split Pane */
+.main-content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(400px, 500px) 1fr;
+  overflow: hidden;
+}
+
+.editor-pane {
+  height: 100%;
+  overflow-y: auto;
+  border-right: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+}
+
+.preview-pane {
+  height: 100%;
+  overflow: auto;
+  background-color: var(--color-bg-alt);
+}
+
+/* Responsive - Stack on smaller screens */
+@media (max-width: 1024px) {
+  .main-content {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+
+  .editor-pane {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+}

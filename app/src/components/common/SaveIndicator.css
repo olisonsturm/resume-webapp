@@ -1,0 +1,44 @@
+.save-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.save-indicator.idle {
+    color: var(--color-text-muted);
+    background: transparent;
+}
+
+.save-indicator.saving {
+    color: var(--color-primary);
+    background: rgba(30, 144, 255, 0.1);
+}
+
+.save-indicator.saved {
+    color: var(--color-success);
+    background: rgba(45, 192, 141, 0.1);
+}
+
+.save-indicator svg {
+    flex-shrink: 0;
+}
+
+/* Spin animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}

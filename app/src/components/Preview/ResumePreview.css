@@ -1,0 +1,360 @@
+/* Enhancv Double Template - Exact Clone */
+
+.resume-preview {
+    background-color: #e8ebef;
+    padding: 24px;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+    gap: 24px;
+}
+
+.pages-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+.resume-page {
+    width: 210mm;
+    min-height: 297mm;
+    background: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    padding: 40px 50px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 11px;
+    line-height: 1.35;
+    color: #212121;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.page-number {
+    position: absolute;
+    bottom: 20px;
+    right: 50px;
+    font-size: 9px;
+    color: #999;
+}
+
+/* ==================== HEADER ==================== */
+.resume-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding-bottom: 0;
+}
+
+.header-content {
+    flex: 1;
+}
+
+.name {
+    font-family: 'Rubik', 'Inter', -apple-system, sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0 0 2px 0;
+    letter-spacing: 0.5px;
+    color: #000000;
+    line-height: 1.1;
+}
+
+.title {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    color: #1a91da;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+}
+
+.contact-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+}
+
+.contact-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: #555555;
+}
+
+.contact-item svg {
+    color: #1a91da;
+    flex-shrink: 0;
+}
+
+.header-photo {
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-left: 20px;
+    flex-shrink: 0;
+}
+
+.header-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ==================== TWO COLUMNS ==================== */
+.resume-columns {
+    display: grid;
+    grid-template-columns: 58% 38%;
+    gap: 20px;
+}
+
+.column-left,
+.column-right {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ==================== SECTIONS ==================== */
+.resume-section {
+    margin-bottom: 14px;
+}
+
+.section-heading {
+    font-family: 'Rubik', 'Inter', -apple-system, sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #000000;
+    text-transform: uppercase;
+    border-bottom: 2.5px solid #000000;
+    padding-bottom: 3px;
+    margin: 0 0 10px 0;
+    letter-spacing: 0.3px;
+}
+
+/* ==================== EXPERIENCE & EDUCATION ==================== */
+.experience-item,
+.education-item {
+    margin-bottom: 12px;
+    padding-bottom: 0;
+}
+
+.item-header {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.company-logo {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.item-details {
+    flex: 1;
+}
+
+.item-title {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #000000;
+    margin: 0 0 1px 0;
+    line-height: 1.25;
+}
+
+.item-company {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    color: #1a91da;
+    margin: 0 0 2px 0;
+    line-height: 1.2;
+}
+
+.item-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-top: 1px;
+}
+
+.meta-date,
+.meta-location {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 9px;
+    color: #666666;
+}
+
+.meta-date svg,
+.meta-location svg {
+    color: #1a91da;
+}
+
+.item-description {
+    font-size: 10px;
+    color: #333333;
+    margin-top: 6px;
+    line-height: 1.45;
+    text-align: left;
+}
+
+.item-bullets {
+    margin: 4px 0 0 14px;
+    padding: 0;
+    font-size: 10px;
+    color: #333333;
+    line-height: 1.4;
+}
+
+.item-bullets li {
+    margin-bottom: 2px;
+}
+
+/* ==================== KEY ACHIEVEMENTS ==================== */
+.achievement-item {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    align-items: flex-start;
+}
+
+.achievement-icon {
+    color: #1a91da;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.achievement-content {
+    flex: 1;
+}
+
+.achievement-title {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #000000;
+    margin: 0 0 1px 0;
+    line-height: 1.25;
+}
+
+.achievement-desc {
+    font-size: 10px;
+    color: #555555;
+    line-height: 1.35;
+    margin: 0;
+}
+
+/* ==================== CERTIFICATION ==================== */
+.cert-item {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.cert-title {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #000000;
+    margin: 0 0 1px 0;
+    line-height: 1.25;
+    display: block;
+}
+
+.cert-issuer {
+    font-size: 10px;
+    color: #1a91da;
+    margin: 0;
+    line-height: 1.3;
+    display: block;
+}
+
+/* ==================== SKILLS ==================== */
+.skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.skill-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    background-color: #f0f0f0;
+    border-radius: 12px;
+    font-size: 10px;
+    color: #333333;
+    line-height: 1.2;
+}
+
+/* ==================== LANGUAGES ==================== */
+.language-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.language-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.language-name {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #000000;
+    line-height: 1.2;
+}
+
+.language-level-text {
+    font-size: 9px;
+    color: #666666;
+    line-height: 1.2;
+}
+
+.language-dots {
+    display: flex;
+    gap: 3px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #dddddd;
+}
+
+.dot.filled {
+    background-color: #1a91da;
+}
+
+/* ==================== PRINT ==================== */
+@media print {
+    .resume-preview {
+        padding: 0;
+        background: none;
+    }
+
+    .resume-page {
+        width: 100%;
+        box-shadow: none;
+        margin: 0;
+        padding: 40px 50px;
+        page-break-after: always;
+    }
+
+    .page-number {
+        display: none;
+    }
+}

@@ -1,0 +1,72 @@
+.signature-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.signature-upload {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.signature-preview {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+}
+
+.signature-preview img {
+    max-height: 60px;
+    max-width: 200px;
+    object-fit: contain;
+}
+
+.upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.upload-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.attachments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.attachment-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+}
+
+.attachment-item span {
+    font-size: 0.9rem;
+}
+
+.btn-sm {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.btn-icon {
+    padding: 0.25rem 0.5rem;
+}
