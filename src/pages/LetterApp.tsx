@@ -16,10 +16,12 @@ export function LetterApp() {
     const letterRef = useRef<HTMLDivElement>(null);
     const { letterList, loadLetter, resetCurrentLetter } = useLetterStore();
     const letter = useActiveLetter();
-    const { flushPendingSaves } = useCloudSync();
+    const { flushPendingSaves, isLoading } = useCloudSync();
     const [isGenerating, setIsGenerating] = useState(false);
 
     useEffect(() => {
+        if (isLoading) return; // Wait for cloud sync
+
         if (id) {
             const letterExists = letterList.some(l => l.id === id);
             if (letterExists) {
@@ -28,7 +30,7 @@ export function LetterApp() {
                 navigate('/dashboard');
             }
         }
-    }, [id, letterList, loadLetter, navigate]);
+    }, [id, letterList, loadLetter, navigate, isLoading]);
 
     // Flush pending saves on unmount
     useEffect(() => {
@@ -61,6 +63,14 @@ export function LetterApp() {
             setIsGenerating(false);
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-slate-900">
+                <Loader2 size={40} className="animate-spin text-blue-500" />
+            </div>
+        );
+    }
 
     if (!currentLetter) {
         return null;

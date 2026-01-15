@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useResumeStore, type CVFile } from '../store/resumeStore';
 import { useLetterStore, type LetterFile } from '../store/letterStore';
@@ -42,12 +42,17 @@ export function useCloudSync() {
     const { user } = useAuthStore();
     const syncedRef = useRef(false);
     const lastSyncRef = useRef<string>('');
+    const [isLoading, setIsLoading] = useState(true);
 
     // Load data from cloud on mount/login
     const loadFromCloud = useCallback(async () => {
-        if (!isSupabaseConfigured() || !supabase || !user) return;
+        if (!isSupabaseConfigured() || !supabase || !user) {
+            setIsLoading(false);
+            return;
+        }
 
         try {
+            setIsLoading(true);
             // CRITICAL: Clear local data first to prevent showing previous user's data
             useResumeStore.setState({ cvList: [], activeCvId: null });
             useLetterStore.setState({ letterList: [], activeLetterId: null });
@@ -60,24 +65,21 @@ export function useCloudSync() {
                 .order('updated_at', { ascending: false });
 
             if (cvs && cvs.length > 0) {
-                // Convert from DB format to store format
-                const cvList: CVFile[] = cvs.map(cv => ({
+                const parsedCvs: CVFile[] = cvs.map(cv => ({
                     id: cv.id,
                     name: cv.name,
                     linkedInUrl: cv.linkedin_url || undefined,
-                    resume: cv.resume as Resume,
+                    resume: cv.resume_data as Resume,
                     createdAt: cv.created_at,
-                    updatedAt: cv.updated_at,
+                    updatedAt: cv.updated_at
                 }));
-
-                // Update store with user's cloud data
-                useResumeStore.setState({
-                    cvList,
-                    activeCvId: cvList[0]?.id || null
-                });
+                useResumeStore.setState({ cvList: parsedCvs });
+                if (parsedCvs.length > 0) {
+                    useResumeStore.setState({ activeCvId: parsedCvs[0].id });
+                }
             }
 
-            // Load Letters for this specific user
+            // Load Letters for this specific user (FIXED: Added user_id filter here too)
             const { data: letters } = await supabase
                 .from('letters')
                 .select('*')
@@ -85,23 +87,24 @@ export function useCloudSync() {
                 .order('updated_at', { ascending: false });
 
             if (letters && letters.length > 0) {
-                const letterList: LetterFile[] = letters.map(letter => ({
-                    id: letter.id,
-                    name: letter.name,
-                    letterData: letter.letter_data as LetterData,
-                    createdAt: letter.created_at,
-                    updatedAt: letter.updated_at,
+                const parsedLetters: LetterFile[] = letters.map(l => ({
+                    id: l.id,
+                    name: l.name,
+                    letterData: l.letter_data as LetterData,
+                    createdAt: l.created_at,
+                    updatedAt: l.updated_at
                 }));
-
-                useLetterStore.setState({
-                    letterList,
-                    activeLetterId: letterList[0]?.id || null
-                });
+                useLetterStore.setState({ letterList: parsedLetters });
+                if (parsedLetters.length > 0) {
+                    useLetterStore.setState({ activeLetterId: parsedLetters[0].id });
+                }
             }
 
             syncedRef.current = true;
         } catch (error) {
             console.error('Error loading from cloud:', error);
+        } finally {
+            setIsLoading(false);
         }
     }, [user]);
 
@@ -234,5 +237,6 @@ export function useCloudSync() {
         deleteCloudLetter,
         flushPendingSaves,
         isCloudEnabled: isSupabaseConfigured() && !!user,
+        isLoading,
     };
 }

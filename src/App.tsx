@@ -16,11 +16,13 @@ function App() {
   const resumeRef = useRef<HTMLDivElement>(null);
   const { cvList, loadCV, resetCurrentCV } = useResumeStore();
   const resume = useActiveResume();
-  const { flushPendingSaves } = useCloudSync();
+  const { flushPendingSaves, isLoading } = useCloudSync();
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Load the CV when component mounts
   useEffect(() => {
+    if (isLoading) return; // Wait for cloud sync to finish
+
     if (id) {
       const cvExists = cvList.some(cv => cv.id === id);
       if (cvExists) {
@@ -29,7 +31,7 @@ function App() {
         navigate('/dashboard');
       }
     }
-  }, [id, cvList, loadCV, navigate]);
+  }, [id, cvList, loadCV, navigate, isLoading]);
 
   // Flush pending saves on unmount
   useEffect(() => {
@@ -62,6 +64,14 @@ function App() {
     flushPendingSaves();
     navigate('/dashboard');
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-900">
+        <Loader2 size={40} className="animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
   if (!currentCV) {
     return null;
