@@ -1,5 +1,51 @@
 -- Supabase SQL Schema for Resume Webapp
--- Run this in Supabase SQL Editor to create the tables
+-- Run this in Supabase SQL Editor to create the tables and storage
+
+-- ============================================
+-- STORAGE BUCKET FOR CV IMAGES
+-- ============================================
+
+-- Create storage bucket for CV images (run this first in Storage settings or SQL)
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('cv-images', 'cv-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Allow authenticated users to upload to their own folder
+CREATE POLICY "Users can upload their own images"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'cv-images' 
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Allow authenticated users to update their own images
+CREATE POLICY "Users can update their own images"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+  bucket_id = 'cv-images' 
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Allow authenticated users to delete their own images
+CREATE POLICY "Users can delete their own images"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'cv-images' 
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Allow public read access to all images in the bucket
+CREATE POLICY "Public read access for cv-images"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'cv-images');
+
+-- ============================================
+-- DATABASE TABLES
+-- ============================================
 
 -- Enable UUID extension (usually already enabled)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

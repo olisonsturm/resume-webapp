@@ -73,6 +73,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 
         set({ loading: true });
         await supabase.auth.signOut();
+
+        // CRITICAL: Clear all user data from localStorage to prevent data leakage
+        localStorage.removeItem('cv-storage');
+        localStorage.removeItem('letter-storage');
+
         set({ user: null, session: null, loading: false });
     },
 

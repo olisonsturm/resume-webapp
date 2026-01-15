@@ -29,10 +29,15 @@ export function useCloudSync() {
         if (!isSupabaseConfigured() || !supabase || !user) return;
 
         try {
-            // Load CVs
+            // CRITICAL: Clear local data first to prevent showing previous user's data
+            useResumeStore.setState({ cvList: [], activeCvId: null });
+            useLetterStore.setState({ letterList: [], activeLetterId: null });
+
+            // Load CVs for this specific user
             const { data: cvs } = await supabase
                 .from('cvs')
                 .select('*')
+                .eq('user_id', user.id) // Only load this user's CVs
                 .order('updated_at', { ascending: false });
 
             if (cvs && cvs.length > 0) {
@@ -46,17 +51,18 @@ export function useCloudSync() {
                     updatedAt: cv.updated_at,
                 }));
 
-                // Update store (replace local with cloud data)
+                // Update store with user's cloud data
                 useResumeStore.setState({
                     cvList,
                     activeCvId: cvList[0]?.id || null
                 });
             }
 
-            // Load Letters
+            // Load Letters for this specific user
             const { data: letters } = await supabase
                 .from('letters')
                 .select('*')
+                .eq('user_id', user.id) // Only load this user's letters
                 .order('updated_at', { ascending: false });
 
             if (letters && letters.length > 0) {
