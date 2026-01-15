@@ -21,13 +21,15 @@ interface ProfileStore {
     updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
 }
 
-export const useProfileStore = create<ProfileStore>((set, get) => ({
+export const useProfileStore = create<ProfileStore>((set) => ({
     profile: null,
     isLoading: false,
 
     fetchProfile: async () => {
         const user = useAuthStore.getState().user;
         if (!user) return;
+
+        if (!user || !supabase) return;
 
         set({ isLoading: true });
         try {
@@ -57,6 +59,8 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
     updateProfile: async (updates) => {
         const user = useAuthStore.getState().user;
         if (!user) return;
+
+        if (!user || !supabase) return;
 
         set({ isLoading: true });
         try {

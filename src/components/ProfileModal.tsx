@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, User, MapPin, Phone, Mail, Globe, Briefcase, FileText } from 'lucide-react';
+import { X, Save, User, MapPin, Phone, Mail, Globe, Briefcase } from 'lucide-react';
 import { useProfileStore } from '../store/profileStore';
 import { useAuthStore } from '../store/authStore';
 

@@ -3,7 +3,6 @@ import { ResumePreview } from './Preview/ResumePreview';
 import { LetterPreview } from './LetterPreview/LetterPreview';
 import type { Resume } from '../types/resume';
 import type { LetterData } from '../types/letter';
-import { Loader2 } from 'lucide-react';
 
 interface DocumentPreviewProps {
     type: 'cv' | 'letter';
@@ -14,7 +13,6 @@ interface DocumentPreviewProps {
 export function DocumentPreview({ type, data, className = '' }: DocumentPreviewProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [scale, setScale] = useState(0.3);
-    const [isLoading, setIsLoading] = useState(true);
 
     // Calculate scale to fit container width
     useEffect(() => {
@@ -27,7 +25,6 @@ export function DocumentPreview({ type, data, className = '' }: DocumentPreviewP
                 const standardWidth = 794;
                 const newScale = containerWidth / standardWidth;
                 setScale(newScale);
-                setIsLoading(false);
             }
         };
 

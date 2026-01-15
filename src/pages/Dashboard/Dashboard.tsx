@@ -135,7 +135,7 @@ export function Dashboard() {
                 } else {
                     // Manual creation - Fill from Profile
                     if (profile) {
-                        const freshResume = useResumeStore.getState().resume; // this is current active resume, careful. 
+
                         // Better to rely on createCVWithData handling defaults or construct here.
                         // Actually createCV uses emptyResume. Let's create a fresh empty structure + profile data.
 
