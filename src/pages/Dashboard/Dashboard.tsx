@@ -12,6 +12,8 @@ import { scrapeLinkedInProfile, parseLinkedInPDF, checkServerHealth } from '../.
 import { populateResumeLogos } from '../../utils/logoUtils';
 import { DocumentPreview } from '../../components/DocumentPreview';
 import { ProfileModal } from '../../components/ProfileModal';
+import type { Resume } from '../../types/resume';
+import type { LetterData } from '../../types/letter';
 import './Dashboard.css';
 
 type DocType = 'cv' | 'letter';
@@ -364,52 +366,71 @@ export function Dashboard() {
             </div>
 
             <main className="cv-grid">
-                {filteredDocs.map((doc) => (
-                    <div
-                        key={`${doc.type}-${doc.id}`}
-                        className={`cv-card ${doc.type === 'letter' ? 'letter-card' : ''}`}
-                        onClick={() => doc.type === 'cv' ? handleOpenCV(doc.id) : handleOpenLetter(doc.id)}
-                    >
-                        <div className="cv-card-preview-container">
-                            <DocumentPreview
-                                type={doc.type}
-                                data={doc.type === 'cv' ? (doc as CVFile).resume : (doc as LetterFile).letterData}
-                            />
-                            {/* Overlay on hover is handled by CSS or Click */}
-                            <div className="preview-overlay">
-                                <span className="open-btn">Öffnen</span>
-                            </div>
-                        </div>
+                {filteredDocs.map((doc) => {
+                    const data = doc.type === 'cv' ? (doc as CVFile).resume : (doc as LetterFile).letterData;
+                    const candidateName = doc.type === 'cv'
+                        ? ((data as Resume).header?.name)
+                        : ((data as LetterData).sender?.name);
+                    const jobTitle = doc.type === 'cv'
+                        ? ((data as Resume).header?.title)
+                        : ((data as LetterData).sender?.title);
 
-                        <div className="cv-card-content">
-                            <div className="flex items-center gap-2 mb-1">
-                                {doc.type === 'cv' ? <FileText size={14} className="text-blue-400" /> : <Mail size={14} className="text-purple-400" />}
-                                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">{doc.type === 'cv' ? 'Lebenslauf' : 'Anschreiben'}</span>
+                    return (
+                        <div
+                            key={`${doc.type}-${doc.id}`}
+                            className={`cv-card ${doc.type === 'letter' ? 'letter-card' : ''}`}
+                            onClick={() => doc.type === 'cv' ? handleOpenCV(doc.id) : handleOpenLetter(doc.id)}
+                        >
+                            <div className="cv-card-preview-container">
+                                <DocumentPreview
+                                    type={doc.type}
+                                    data={data}
+                                    className="scale-preview"
+                                />
+                                <div className="preview-overlay">
+                                    <span className="open-btn">Öffnen</span>
+                                </div>
                             </div>
-                            <h3 className="cv-name" title={doc.name}>{doc.name}</h3>
-                            <div className="cv-meta">
-                                <span>Geändert: {formatDate(doc.updatedAt)}</span>
-                            </div>
-                        </div>
 
-                        <div className="cv-card-actions">
-                            <button
-                                className="action-btn"
-                                onClick={(e) => doc.type === 'cv' ? handleDuplicateCV(doc.id, e) : handleDuplicateLetter(doc.id, e)}
-                                title="Duplizieren"
-                            >
-                                <Copy size={16} />
-                            </button>
-                            <button
-                                className="action-btn delete"
-                                onClick={(e) => doc.type === 'cv' ? handleDeleteCV(doc.id, e) : handleDeleteLetter(doc.id, e)}
-                                title="Löschen"
-                            >
-                                <Trash2 size={16} />
-                            </button>
+                            <div className="cv-card-content">
+                                <div className="doc-type-badge">
+                                    {doc.type === 'cv' ? <FileText size={12} /> : <Mail size={12} />}
+                                    <span>{doc.type === 'cv' ? 'Lebenslauf' : 'Anschreiben'}</span>
+                                </div>
+
+                                <h3 className="cv-name" title={doc.name}>{doc.name}</h3>
+
+                                {(candidateName || jobTitle) && (
+                                    <div className="cv-details">
+                                        {candidateName && <div className="detail-row user"><User size={12} /> {candidateName}</div>}
+                                        {jobTitle && <div className="detail-row title">{jobTitle}</div>}
+                                    </div>
+                                )}
+
+                                <div className="cv-meta">
+                                    <span>Aktualisiert: {formatDate(doc.updatedAt)}</span>
+                                </div>
+                            </div>
+
+                            <div className="cv-card-actions">
+                                <button
+                                    className="action-btn"
+                                    onClick={(e) => doc.type === 'cv' ? handleDuplicateCV(doc.id, e) : handleDuplicateLetter(doc.id, e)}
+                                    title="Duplizieren"
+                                >
+                                    <Copy size={16} />
+                                </button>
+                                <button
+                                    className="action-btn delete"
+                                    onClick={(e) => doc.type === 'cv' ? handleDeleteCV(doc.id, e) : handleDeleteLetter(doc.id, e)}
+                                    title="Löschen"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
 
                 {filteredDocs.length === 0 && (
                     <div className="empty-state col-span-full">
