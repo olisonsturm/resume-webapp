@@ -203,7 +203,7 @@ export function LandingPage() {
                     <FileText size={20} />
                     <span>applyro</span>
                 </div>
-                <p>© 2026 applyro. Mit ❤️ erstellt.</p>
+                <p>© 2026 <a href="https://elion-software.de" target="_blank" rel="noopener noreferrer">Elion Software</a>. Mit ❤️ erstellt.</p>
             </footer>
 
             {/* Auth Modal */}

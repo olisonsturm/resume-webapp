@@ -328,6 +328,17 @@
     margin: 0;
 }
 
+.landing-footer a {
+    color: #3b82f6;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.landing-footer a:hover {
+    color: #60a5fa;
+    text-decoration: underline;
+}
+
 /* Buttons */
 .btn {
     display: inline-flex;
