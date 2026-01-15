@@ -19,7 +19,7 @@ export function Dashboard() {
     const { cvList, createCV, createCVWithData, deleteCV, duplicateCV, loadCV } = useResumeStore();
     const { letterList, createLetter, deleteLetter, duplicateLetter, loadLetter } = useLetterStore();
     const { user, signOut } = useAuthStore();
-    const { isCloudEnabled, deleteCloudCV, deleteCloudLetter } = useCloudSync();
+    const { isCloudEnabled, saveCV, saveLetter, deleteCloudCV, deleteCloudLetter } = useCloudSync();
 
     const [activeTab, setActiveTab] = useState<ActiveTab>('cvs');
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -59,6 +59,13 @@ export function Dashboard() {
             if (createDocType === 'letter') {
                 // Create Letter
                 const letterId = createLetter(newDocName.trim());
+
+                // Save to cloud immediately
+                const newLetter = useLetterStore.getState().letterList.find(l => l.id === letterId);
+                if (newLetter) {
+                    saveLetter(newLetter);
+                }
+
                 setShowCreateModal(false);
                 resetModal();
                 loadLetter(letterId);
@@ -87,6 +94,12 @@ export function Dashboard() {
                     }
                 } else {
                     cvId = createCV(newDocName.trim(), newLinkedInUrl.trim() || undefined);
+                }
+
+                // Save to cloud immediately
+                const newCV = useResumeStore.getState().cvList.find(cv => cv.id === cvId);
+                if (newCV) {
+                    saveCV(newCV);
                 }
 
                 setShowCreateModal(false);
