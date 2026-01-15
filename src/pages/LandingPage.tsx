@@ -104,7 +104,7 @@ export function LandingPage() {
             <nav className="landing-nav">
                 <div className="nav-brand">
                     <FileText size={28} />
-                    <span>ResumeBuilder</span>
+                    <span>applyro</span>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowAuthModal(true)}>
                     Jetzt starten
@@ -201,9 +201,9 @@ export function LandingPage() {
             <footer className="landing-footer">
                 <div className="footer-brand">
                     <FileText size={20} />
-                    <span>ResumeBuilder</span>
+                    <span>applyro</span>
                 </div>
-                <p>© 2026 ResumeBuilder. Mit ❤️ erstellt.</p>
+                <p>© 2026 applyro. Mit ❤️ erstellt.</p>
             </footer>
 
             {/* Auth Modal */}
