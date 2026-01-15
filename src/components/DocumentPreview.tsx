@@ -8,22 +8,31 @@ interface DocumentPreviewProps {
     type: 'cv' | 'letter';
     data: Resume | LetterData;
     className?: string;
+    height?: number; // Optional fixed height in pixels
 }
 
-export function DocumentPreview({ type, data, className = '' }: DocumentPreviewProps) {
+export function DocumentPreview({ type, data, className = '', height }: DocumentPreviewProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [scale, setScale] = useState(0.3);
 
-    // Calculate scale to fit container width
+    // Calculate scale to fit container
     useEffect(() => {
         const updateScale = () => {
             if (containerRef.current) {
                 const containerWidth = containerRef.current.clientWidth;
-                // A4 width in pixels (standard web usually ~794px or 210mm)
-                // ResumePreview usually renders at roughly 800px width typically (A4 at 96dpi is 794px)
-                // Let's assume the preview renders at ~794px width.
+                // If height is provided, use it; otherwise fallback to A4 ratio based on width
+                const targetHeight = height || (containerWidth * 1.414);
+
                 const standardWidth = 794;
-                const newScale = containerWidth / standardWidth;
+                const standardHeight = 1123;
+
+                // Calculate scale to fit CONTAIN within the box
+                const scaleW = containerWidth / standardWidth;
+                const scaleH = targetHeight / standardHeight;
+
+                // Use the smaller scale to ensure it fits entirely
+                const newScale = Math.min(scaleW, scaleH);
+
                 setScale(newScale);
             }
         };
@@ -38,15 +47,18 @@ export function DocumentPreview({ type, data, className = '' }: DocumentPreviewP
         }
 
         return () => resizeObserver.disconnect();
-    }, []);
+    }, [height]);
 
     return (
         <div
             ref={containerRef}
             className={`relative bg-white overflow-hidden rounded-t-lg ${className}`}
             style={{
-                height: 0,
-                paddingBottom: '70%' // Show top half of A4 (approx 50% height)
+                height: height ? `${height}px` : 0,
+                paddingBottom: height ? 0 : '141.4%', // Aspect ratio of A4 if no height set
+                display: 'flex',
+                justifyContent: 'center', // Center horizontally
+                alignItems: 'flex-start', // Top align
             }}
         >
             {/* 
@@ -57,11 +69,15 @@ export function DocumentPreview({ type, data, className = '' }: DocumentPreviewP
                 style={{
                     position: 'absolute',
                     top: 0,
-                    left: 0,
+                    // If we are centering (flex), left 0 might fight with justify-center if width is fixed.
+                    // But Transform origin is top center.
+                    // Let's rely on flex centering of the parent for horizontal alignment.
+                    // But we need relative positioning for the child if parent is flex?
+                    // Actually, absolute positioning is fine if we center the transform origin.
                     width: '794px', // Force expected width of A4
                     height: '1123px', // Force expected height of A4
                     transform: `scale(${scale})`,
-                    transformOrigin: 'top left',
+                    transformOrigin: 'top center', // Scale from top center to keep centered
                     pointerEvents: 'none', // Prevent interaction with preview
                     userSelect: 'none',
                 }}
