@@ -6,13 +6,32 @@ import { useAuthStore } from '../store/authStore';
 import type { Resume } from '../types/resume';
 import type { LetterData } from '../types/letter';
 
-// Debounce helper
-function debounce<T extends unknown[]>(fn: (...args: T) => void, delay: number) {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    return (...args: T) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => fn(...args), delay);
+// Debounce helper with flush support
+function createDebouncedFn<T extends unknown[]>(fn: (...args: T) => void, delay: number) {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let lastArgs: T | null = null;
+
+    const debouncedFn = (...args: T) => {
+        lastArgs = args;
+        if (timeoutId) clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            fn(...args);
+            lastArgs = null;
+            timeoutId = null;
+        }, delay);
     };
+
+    // Flush: execute immediately if there's a pending call
+    debouncedFn.flush = () => {
+        if (timeoutId && lastArgs) {
+            clearTimeout(timeoutId);
+            fn(...lastArgs);
+            lastArgs = null;
+            timeoutId = null;
+        }
+    };
+
+    return debouncedFn;
 }
 
 /**
@@ -153,16 +172,9 @@ export function useCloudSync() {
         }
     }, [user]);
 
-    // Debounced save for real-time editing
-    const debouncedSaveCV = useCallback(
-        debounce((cv: CVFile) => saveCV(cv), 1500),
-        [saveCV]
-    );
-
-    const debouncedSaveLetter = useCallback(
-        debounce((letter: LetterFile) => saveLetter(letter), 1500),
-        [saveLetter]
-    );
+    // Debounced save for real-time editing with flush support
+    const debouncedSaveCV = useRef(createDebouncedFn((cv: CVFile) => saveCV(cv), 1500)).current;
+    const debouncedSaveLetter = useRef(createDebouncedFn((letter: LetterFile) => saveLetter(letter), 1500)).current;
 
     // Load from cloud when user logs in
     useEffect(() => {
@@ -208,12 +220,19 @@ export function useCloudSync() {
         return unsubscribe;
     }, [user, debouncedSaveLetter]);
 
+    // Flush pending saves - call this before navigation
+    const flushPendingSaves = useCallback(() => {
+        debouncedSaveCV.flush();
+        debouncedSaveLetter.flush();
+    }, [debouncedSaveCV, debouncedSaveLetter]);
+
     return {
         loadFromCloud,
         saveCV,
         saveLetter,
         deleteCloudCV,
         deleteCloudLetter,
+        flushPendingSaves,
         isCloudEnabled: isSupabaseConfigured() && !!user,
     };
 }

@@ -8,12 +8,15 @@ import { generatePDF } from './utils/pdfGenerator';
 import { SaveIndicator } from './components/common/SaveIndicator';
 import './App.css';
 
+import { useCloudSync } from './hooks/useCloudSync';
+
 function App() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const resumeRef = useRef<HTMLDivElement>(null);
   const { cvList, loadCV, resetCurrentCV } = useResumeStore();
   const resume = useActiveResume();
+  const { flushPendingSaves } = useCloudSync();
   const [isGenerating, setIsGenerating] = useState(false);
 
   // Load the CV when component mounts
@@ -23,10 +26,17 @@ function App() {
       if (cvExists) {
         loadCV(id);
       } else {
-        navigate('/');
+        navigate('/dashboard');
       }
     }
   }, [id, cvList, loadCV, navigate]);
+
+  // Flush pending saves on unmount
+  useEffect(() => {
+    return () => {
+      flushPendingSaves();
+    };
+  }, [flushPendingSaves]);
 
   const currentCV = cvList.find(cv => cv.id === id);
 
@@ -48,6 +58,11 @@ function App() {
     }
   };
 
+  const handleBack = () => {
+    flushPendingSaves();
+    navigate('/dashboard');
+  };
+
   if (!currentCV) {
     return null;
   }
@@ -57,7 +72,7 @@ function App() {
       {/* Top Navbar */}
       <nav className="navbar">
         <div className="navbar-left">
-          <button className="btn btn-ghost" onClick={() => navigate('/')}>
+          <button className="btn btn-ghost" onClick={handleBack}>
             <ArrowLeft size={16} />
             Back
           </button>

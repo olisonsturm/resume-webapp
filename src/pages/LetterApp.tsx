@@ -8,12 +8,15 @@ import { generatePDF } from '../utils/pdfGenerator';
 import { SaveIndicator } from '../components/common/SaveIndicator';
 import '../App.css';
 
+import { useCloudSync } from '../hooks/useCloudSync';
+
 export function LetterApp() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const letterRef = useRef<HTMLDivElement>(null);
     const { letterList, loadLetter, resetCurrentLetter } = useLetterStore();
     const letter = useActiveLetter();
+    const { flushPendingSaves } = useCloudSync();
     const [isGenerating, setIsGenerating] = useState(false);
 
     useEffect(() => {
@@ -22,12 +25,24 @@ export function LetterApp() {
             if (letterExists) {
                 loadLetter(id);
             } else {
-                navigate('/');
+                navigate('/dashboard');
             }
         }
     }, [id, letterList, loadLetter, navigate]);
 
+    // Flush pending saves on unmount
+    useEffect(() => {
+        return () => {
+            flushPendingSaves();
+        };
+    }, [flushPendingSaves]);
+
     const currentLetter = letterList.find(l => l.id === id);
+
+    const handleBack = () => {
+        flushPendingSaves();
+        navigate('/dashboard');
+    };
 
     const handleExportPDF = async () => {
         if (!letterRef.current) return;
@@ -55,7 +70,7 @@ export function LetterApp() {
         <div className="app">
             <nav className="navbar">
                 <div className="navbar-left">
-                    <button className="btn btn-ghost" onClick={() => navigate('/')}>
+                    <button className="btn btn-ghost" onClick={handleBack}>
                         <ArrowLeft size={16} />
                         Zurück
                     </button>
