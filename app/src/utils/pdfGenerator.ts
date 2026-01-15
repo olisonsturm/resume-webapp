@@ -5,7 +5,7 @@ import html2canvas from 'html2canvas';
 const A4_WIDTH_MM = 210;
 
 export async function generatePDF(pagesContainer: HTMLElement, filename: string = 'Resume.pdf') {
-    const pages = pagesContainer.querySelectorAll('.resume-page');
+    const pages = pagesContainer.querySelectorAll('.resume-page, .letter-page');
 
     if (pages.length === 0) {
         console.error('No pages found');
@@ -35,11 +35,81 @@ export async function generatePDF(pagesContainer: HTMLElement, filename: string 
             logging: false,
             backgroundColor: '#ffffff',
             imageTimeout: 15000, // Wait longer for images to load
-            onclone: (clonedDoc) => {
-                // Ensure images are loaded in cloned document
-                const images = clonedDoc.querySelectorAll('img');
-                images.forEach((img) => {
+            onclone: (clonedDoc, clonedElement) => {
+                // Fix object-fit rendering issue
+                // Instead of background-image, we position the img correctly within a clipped container
+                const images = clonedElement.querySelectorAll('img');
+                images.forEach((img: HTMLImageElement) => {
                     img.crossOrigin = 'anonymous';
+
+                    const computedStyle = window.getComputedStyle(img);
+                    const objectFit = computedStyle.objectFit;
+
+                    if (objectFit && (objectFit === 'cover' || objectFit === 'contain')) {
+                        const containerWidth = img.clientWidth;
+                        const containerHeight = img.clientHeight;
+                        const naturalWidth = img.naturalWidth || containerWidth;
+                        const naturalHeight = img.naturalHeight || containerHeight;
+
+                        if (containerWidth > 0 && containerHeight > 0 && naturalWidth > 0 && naturalHeight > 0) {
+                            const containerRatio = containerWidth / containerHeight;
+                            const imageRatio = naturalWidth / naturalHeight;
+
+                            let newWidth: number, newHeight: number, offsetX: number, offsetY: number;
+
+                            if (objectFit === 'cover') {
+                                // Scale to cover the container
+                                if (imageRatio > containerRatio) {
+                                    // Image is wider - scale by height
+                                    newHeight = containerHeight;
+                                    newWidth = naturalWidth * (containerHeight / naturalHeight);
+                                } else {
+                                    // Image is taller - scale by width
+                                    newWidth = containerWidth;
+                                    newHeight = naturalHeight * (containerWidth / naturalWidth);
+                                }
+                                offsetX = (containerWidth - newWidth) / 2;
+                                offsetY = (containerHeight - newHeight) / 2;
+                            } else {
+                                // contain - scale to fit inside
+                                if (imageRatio > containerRatio) {
+                                    newWidth = containerWidth;
+                                    newHeight = naturalHeight * (containerWidth / naturalWidth);
+                                } else {
+                                    newHeight = containerHeight;
+                                    newWidth = naturalWidth * (containerHeight / naturalHeight);
+                                }
+                                offsetX = (containerWidth - newWidth) / 2;
+                                offsetY = (containerHeight - newHeight) / 2;
+                            }
+
+                            // Create wrapper div
+                            const wrapper = clonedDoc.createElement('div');
+                            wrapper.style.cssText = `
+                                width: ${containerWidth}px;
+                                height: ${containerHeight}px;
+                                overflow: hidden;
+                                position: relative;
+                                border-radius: ${computedStyle.borderRadius};
+                            `;
+
+                            // Clone the image and apply calculated dimensions
+                            const clonedImg = img.cloneNode(true) as HTMLImageElement;
+                            clonedImg.style.cssText = `
+                                width: ${newWidth}px;
+                                height: ${newHeight}px;
+                                position: absolute;
+                                left: ${offsetX}px;
+                                top: ${offsetY}px;
+                                object-fit: fill;
+                                max-width: none;
+                                max-height: none;
+                            `;
+
+                            wrapper.appendChild(clonedImg);
+                            img.replaceWith(wrapper);
+                        }
+                    }
                 });
             },
         });
