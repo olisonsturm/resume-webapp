@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, FileText, Trash2, Copy, Edit3, Linkedin, ExternalLink, Loader2, AlertCircle, Upload, Mail } from 'lucide-react';
+import { Plus, FileText, Trash2, Copy, Edit3, Linkedin, ExternalLink, Loader2, AlertCircle, Upload, Mail, User, LogOut, Cloud, CloudOff } from 'lucide-react';
 import { useResumeStore } from '../../store/resumeStore';
 import type { CVFile } from '../../store/resumeStore';
 import { useLetterStore } from '../../store/letterStore';
 import type { LetterFile } from '../../store/letterStore';
+import { useAuthStore } from '../../store/authStore';
+import { useCloudSync } from '../../hooks/useCloudSync';
 import { scrapeLinkedInProfile, parseLinkedInPDF, checkServerHealth } from '../../utils/linkedinApi';
 import { populateResumeLogos } from '../../utils/logoUtils';
 import './Dashboard.css';
@@ -16,6 +18,8 @@ export function Dashboard() {
     const navigate = useNavigate();
     const { cvList, createCV, createCVWithData, deleteCV, duplicateCV, loadCV } = useResumeStore();
     const { letterList, createLetter, deleteLetter, duplicateLetter, loadLetter } = useLetterStore();
+    const { user, signOut } = useAuthStore();
+    const { isCloudEnabled, deleteCloudCV, deleteCloudLetter } = useCloudSync();
 
     const [activeTab, setActiveTab] = useState<ActiveTab>('cvs');
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -26,6 +30,7 @@ export function Dashboard() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+    const [showUserMenu, setShowUserMenu] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -118,6 +123,7 @@ export function Dashboard() {
         }
         if (confirm('Diesen CV wirklich löschen?')) {
             deleteCV(id);
+            deleteCloudCV(id); // Also delete from cloud if synced
         }
     };
 
@@ -130,6 +136,7 @@ export function Dashboard() {
         e.stopPropagation();
         if (confirm('Dieses Anschreiben wirklich löschen?')) {
             deleteLetter(id);
+            deleteCloudLetter(id); // Also delete from cloud if synced
         }
     };
 
@@ -172,6 +179,40 @@ export function Dashboard() {
                         <Plus size={18} />
                         CV erstellen
                     </button>
+                </div>
+
+                {/* User Menu */}
+                <div className="user-menu-container">
+                    <button
+                        className="user-menu-trigger"
+                        onClick={() => setShowUserMenu(!showUserMenu)}
+                    >
+                        {isCloudEnabled ? (
+                            <Cloud size={16} className="cloud-icon synced" />
+                        ) : (
+                            <CloudOff size={16} className="cloud-icon offline" />
+                        )}
+                        <User size={20} />
+                        <span className="user-email">{user?.email?.split('@')[0] || 'User'}</span>
+                    </button>
+
+                    {showUserMenu && (
+                        <div className="user-dropdown">
+                            <div className="user-dropdown-header">
+                                <span className="user-full-email">{user?.email || 'Not logged in'}</span>
+                                <span className="cloud-status">
+                                    {isCloudEnabled ? '☁️ Cloud Sync Active' : '💾 Local Only'}
+                                </span>
+                            </div>
+                            <button
+                                className="dropdown-item logout"
+                                onClick={() => { signOut(); setShowUserMenu(false); }}
+                            >
+                                <LogOut size={16} />
+                                Abmelden
+                            </button>
+                        </div>
+                    )}
                 </div>
             </header>
 

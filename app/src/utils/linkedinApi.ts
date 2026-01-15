@@ -1,37 +1,20 @@
 import type { Resume } from '../types/resume';
 
-const API_BASE = 'http://localhost:3001';
-
 export interface LinkedInScrapResult {
     success: boolean;
     error?: string;
     data: Resume | null;
 }
 
-export async function scrapeLinkedInProfile(linkedInUrl: string): Promise<LinkedInScrapResult> {
-    try {
-        const response = await fetch(`${API_BASE}/api/scrape-linkedin`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ linkedInUrl }),
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        return result;
-    } catch (error) {
-        console.error('LinkedIn API error:', error);
-        return {
-            success: false,
-            error: 'Could not connect to LinkedIn scraper. Make sure the server is running.',
-            data: null,
-        };
-    }
+export async function scrapeLinkedInProfile(_linkedInUrl: string): Promise<LinkedInScrapResult> {
+    // Note: LinkedIn scraping is not supported in serverless due to rate limiting
+    // This feature requires the Express server or a different approach
+    console.warn('LinkedIn URL scraping is only available with the local Express server');
+    return {
+        success: false,
+        error: 'LinkedIn URL scraping is not available. Please use LinkedIn PDF export instead.',
+        data: null,
+    };
 }
 
 export async function parseLinkedInPDF(file: File): Promise<LinkedInScrapResult> {
@@ -39,10 +22,19 @@ export async function parseLinkedInPDF(file: File): Promise<LinkedInScrapResult>
         const formData = new FormData();
         formData.append('pdf', file);
 
-        const response = await fetch(`${API_BASE}/api/parse-linkedin-pdf`, {
+        // Try serverless API first
+        let response = await fetch(`/api/parse-linkedin-pdf`, {
             method: 'POST',
             body: formData,
         });
+
+        // If serverless fails in dev, try Express server
+        if (!response.ok && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+            response = await fetch(`http://localhost:3001/api/parse-linkedin-pdf`, {
+                method: 'POST',
+                body: formData,
+            });
+        }
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -54,7 +46,7 @@ export async function parseLinkedInPDF(file: File): Promise<LinkedInScrapResult>
         console.error('LinkedIn PDF API error:', error);
         return {
             success: false,
-            error: 'Could not connect to LinkedIn PDF parser. Make sure the server is running.',
+            error: 'Could not parse LinkedIn PDF. Make sure the file is valid.',
             data: null,
         };
     }
@@ -62,10 +54,17 @@ export async function parseLinkedInPDF(file: File): Promise<LinkedInScrapResult>
 
 export async function checkServerHealth(): Promise<boolean> {
     try {
-        const response = await fetch(`${API_BASE}/api/health`);
-        return response.ok;
+        // Try serverless health endpoint
+        let response = await fetch(`/api/health`);
+        if (response.ok) return true;
+
+        // Fallback to Express server in dev
+        if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+            response = await fetch(`http://localhost:3001/api/health`);
+            return response.ok;
+        }
+        return false;
     } catch {
         return false;
     }
 }
-

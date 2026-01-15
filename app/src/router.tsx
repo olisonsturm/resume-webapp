@@ -2,18 +2,36 @@ import { createBrowserRouter } from 'react-router-dom';
 import { Dashboard } from './pages/Dashboard';
 import App from './App';
 import { LetterApp } from './pages/LetterApp';
+import { Login } from './pages/Login';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 export const router = createBrowserRouter([
     {
+        path: '/login',
+        element: <Login />,
+    },
+    {
         path: '/',
-        element: <Dashboard />,
+        element: (
+            <ProtectedRoute>
+                <Dashboard />
+            </ProtectedRoute>
+        ),
     },
     {
         path: '/cv/:id',
-        element: <App />,
+        element: (
+            <ProtectedRoute>
+                <App />
+            </ProtectedRoute>
+        ),
     },
     {
         path: '/letter/:id',
-        element: <LetterApp />,
+        element: (
+            <ProtectedRoute>
+                <LetterApp />
+            </ProtectedRoute>
+        ),
     },
 ]);

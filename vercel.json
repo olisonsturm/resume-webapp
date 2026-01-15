@@ -1,0 +1,12 @@
+{
+    "buildCommand": "cd app && npm install && npm run build",
+    "outputDirectory": "app/dist",
+    "installCommand": "npm install && cd app && npm install",
+    "framework": "vite",
+    "functions": {
+        "api/*.js": {
+            "memory": 256,
+            "maxDuration": 10
+        }
+    }
+}
