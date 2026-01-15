@@ -369,15 +369,14 @@ export function Dashboard() {
                 {filteredDocs.map((doc) => {
                     const data = doc.type === 'cv' ? (doc as CVFile).resume : (doc as LetterFile).letterData;
 
-                    // Defensive check: if data is somehow missing, render card but with empty/default content instead of hiding
-                    const safeData = data || {} as any;
+                    // Defensive check: allow rendering even if data is missing
 
                     const candidateName = doc.type === 'cv'
-                        ? ((safeData as Resume)?.header?.name)
-                        : ((safeData as LetterData)?.sender?.name);
+                        ? ((data as Resume | undefined)?.header?.name)
+                        : ((data as LetterData | undefined)?.sender?.name);
                     const jobTitle = doc.type === 'cv'
-                        ? ((safeData as Resume)?.header?.title)
-                        : ((safeData as LetterData)?.sender?.title);
+                        ? ((data as Resume | undefined)?.header?.title)
+                        : ((data as LetterData | undefined)?.sender?.title);
 
                     return (
                         <div
