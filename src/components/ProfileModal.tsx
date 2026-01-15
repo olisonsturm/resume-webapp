@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, User, MapPin, Phone, Mail, Globe, Briefcase } from 'lucide-react';
+import { X, Save, User, MapPin, Phone, Mail, Globe, LayoutTemplate } from 'lucide-react';
 import { useProfileStore } from '../store/profileStore';
 import { useAuthStore } from '../store/authStore';
 
@@ -12,6 +12,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     const { profile, updateProfile, fetchProfile } = useProfileStore();
     const { user } = useAuthStore();
     const [loading, setLoading] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -26,6 +27,7 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
     useEffect(() => {
         if (isOpen) {
+            setIsVisible(true);
             if (!profile) {
                 fetchProfile();
             } else {
@@ -39,10 +41,13 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     website: profile.website || '',
                 });
             }
+        } else {
+            const timer = setTimeout(() => setIsVisible(false), 300); // Wait for animation
+            return () => clearTimeout(timer);
         }
     }, [isOpen, profile, user, fetchProfile]);
 
-    if (!isOpen) return null;
+    if (!isVisible && !isOpen) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -58,159 +63,179 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
-                <div className="sticky top-0 z-10 flex items-center justify-between p-6 bg-slate-900 border-b border-slate-800">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 bg-blue-500/10 rounded-xl">
-                            <User className="text-blue-500" size={24} />
-                        </div>
-                        <div>
-                            <h2 className="text-xl font-bold text-white">Profil bearbeiten</h2>
-                            <p className="text-sm text-slate-400">Diese Daten werden für neue Dokumente verwendet</p>
-                        </div>
+        <div className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+            {/* Backdrop */}
+            <div
+                className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity"
+                onClick={onClose}
+            />
+
+            {/* Side Sheet */}
+            <div
+                className={`relative w-full max-w-md h-full bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-spring ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white z-10">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900">Profil bearbeiten</h2>
+                        <p className="text-sm text-gray-500 mt-1">Ihre persönlichen Daten für Dokumente</p>
                     </div>
-                    <button onClick={onClose} className="p-2 text-slate-400 transition-colors hover:text-white hover:bg-slate-800 rounded-lg">
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                    >
                         <X size={20} />
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {/* Personal Info */}
-                        <div className="space-y-4">
-                            <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-300">
-                                <User size={16} /> Persönliche Daten
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+                    <form id="profile-form" onSubmit={handleSubmit} className="space-y-8">
+
+                        {/* Section: Identity */}
+                        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider">
+                                <User size={16} className="text-blue-500" />
+                                Identität
                             </h3>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-slate-400">Vollständiger Name</label>
-                                <input
-                                    type="text"
-                                    value={formData.full_name}
-                                    onChange={e => setFormData({ ...formData, full_name: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all"
-                                    placeholder="Max Mustermann"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-slate-400">Aktueller Job-Titel</label>
-                                <div className="relative">
-                                    <Briefcase size={16} className="absolute left-3 top-3 text-slate-500" />
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Vollständiger Name</label>
                                     <input
                                         type="text"
-                                        value={formData.job_title}
-                                        onChange={e => setFormData({ ...formData, job_title: e.target.value })}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all"
-                                        placeholder="Software Engineer"
+                                        value={formData.full_name}
+                                        onChange={e => setFormData({ ...formData, full_name: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-300 font-medium"
+                                        placeholder="Max Mustermann"
                                     />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Job Titel</label>
+                                    <div className="relative">
+                                        <LayoutTemplate size={18} className="absolute left-3 top-2.5 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            value={formData.job_title}
+                                            onChange={e => setFormData({ ...formData, job_title: e.target.value })}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-300"
+                                            placeholder="Senior Marketing Manager"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Contact Info */}
-                        <div className="space-y-4">
-                            <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-300">
-                                <Phone size={16} /> Kontakt
+                        {/* Section: Contact */}
+                        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider">
+                                <Phone size={16} className="text-blue-500" />
+                                Kontakt
                             </h3>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-slate-400">E-Mail</label>
-                                <div className="relative">
-                                    <Mail size={16} className="absolute left-3 top-3 text-slate-500" />
-                                    <input
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all"
-                                        placeholder="email@example.com"
-                                    />
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">E-Mail Adresse</label>
+                                    <div className="relative">
+                                        <Mail size={18} className="absolute left-3 top-2.5 text-gray-400" />
+                                        <input
+                                            type="email"
+                                            value={formData.email}
+                                            onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-300"
+                                            placeholder="email@beispiel.de"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-slate-400">Telefon</label>
-                                <div className="relative">
-                                    <Phone size={16} className="absolute left-3 top-3 text-slate-500" />
-                                    <input
-                                        type="text"
-                                        value={formData.phone}
-                                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all"
-                                        placeholder="+49 123 4567890"
-                                    />
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Telefonnummer</label>
+                                    <div className="relative">
+                                        <Phone size={18} className="absolute left-3 top-2.5 text-gray-400" />
+                                        <input
+                                            type="tel"
+                                            value={formData.phone}
+                                            onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-300"
+                                            placeholder="+49 151 12345678"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Location & Web */}
-                        <div className="space-y-4">
-                            <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-300">
-                                <MapPin size={16} /> Adresse & Web
+                        {/* Section: Location & Details */}
+                        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                            <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider">
+                                <MapPin size={16} className="text-blue-500" />
+                                Standort & Links
                             </h3>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-slate-400">Straße & Hausnummer</label>
-                                <input
-                                    type="text"
-                                    value={formData.address}
-                                    onChange={e => setFormData({ ...formData, address: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all"
-                                    placeholder="Musterstraße 1"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-slate-400">PLZ & Ort</label>
-                                <input
-                                    type="text"
-                                    value={formData.location}
-                                    onChange={e => setFormData({ ...formData, location: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all"
-                                    placeholder="12345 Musterstadt"
-                                />
-                            </div>
-
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="text-xs font-medium text-slate-400">Website / LinkedIn</label>
-                                <div className="relative">
-                                    <Globe size={16} className="absolute left-3 top-3 text-slate-500" />
-                                    <input
-                                        type="text"
-                                        value={formData.website}
-                                        onChange={e => setFormData({ ...formData, website: e.target.value })}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition-all"
-                                        placeholder="linkedin.com/in/..."
-                                    />
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Straße & Nr.</label>
+                                        <input
+                                            type="text"
+                                            value={formData.address}
+                                            onChange={e => setFormData({ ...formData, address: e.target.value })}
+                                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-300"
+                                            placeholder="Musterstraße 42"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">PLZ & Ort</label>
+                                        <input
+                                            type="text"
+                                            value={formData.location}
+                                            onChange={e => setFormData({ ...formData, location: e.target.value })}
+                                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-300"
+                                            placeholder="10115 Berlin"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase">Website / LinkedIn</label>
+                                    <div className="relative">
+                                        <Globe size={18} className="absolute left-3 top-2.5 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            value={formData.website}
+                                            onChange={e => setFormData({ ...formData, website: e.target.value })}
+                                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-gray-300"
+                                            placeholder="linkedin.com/in/name"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-800">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="px-4 py-2 text-sm font-medium text-slate-300 transition-colors hover:text-white"
-                        >
-                            Abbrechen
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white transition-all bg-blue-600 rounded-lg hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {loading ? (
-                                <span className="w-4 h-4 border-2 border-white rounded-full border-t-transparent animate-spin" />
-                            ) : (
-                                <Save size={16} />
-                            )}
-                            Speichern
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
+
+                {/* Footer */}
+                <div className="p-6 border-t border-gray-100 bg-white shadow-lg-up z-10 flex gap-3">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 px-4 py-3 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                    >
+                        Abbrechen
+                    </button>
+                    <button
+                        type="submit"
+                        form="profile-form"
+                        disabled={loading}
+                        className="flex-[2] flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/20 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {loading ? (
+                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <>
+                                <Save size={18} />
+                                Änderungen speichern
+                            </>
+                        )}
+                    </button>
+                </div>
             </div>
         </div>
     );
 }
+

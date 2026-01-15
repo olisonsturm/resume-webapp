@@ -46,7 +46,7 @@ export function DocumentPreview({ type, data, className = '' }: DocumentPreviewP
             className={`relative bg-white overflow-hidden rounded-t-lg ${className}`}
             style={{
                 height: 0,
-                paddingBottom: '141.4%' // Aspect ratio of A4 (1 / sqrt(2) approx 1.414 height/width)
+                paddingBottom: '70%' // Show top half of A4 (approx 50% height)
             }}
         >
             {/* 
