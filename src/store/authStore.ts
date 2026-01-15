@@ -14,6 +14,7 @@ interface AuthState {
     signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
     signOut: () => Promise<void>;
     signInWithGoogle: () => Promise<{ error: Error | null }>;
+    signInWithGithub: () => Promise<{ error: Error | null }>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -83,10 +84,26 @@ export const useAuthStore = create<AuthState>((set) => ({
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${window.location.origin}/`,
+                redirectTo: `${window.location.origin}/dashboard`,
+            },
+        });
+
+        return { error: error ? new Error(error.message) : null };
+    },
+
+    signInWithGithub: async () => {
+        if (!isSupabaseConfigured() || !supabase) {
+            return { error: new Error('Supabase not configured') };
+        }
+
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: 'github',
+            options: {
+                redirectTo: `${window.location.origin}/dashboard`,
             },
         });
 
         return { error: error ? new Error(error.message) : null };
     },
 }));
+

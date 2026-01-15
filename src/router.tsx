@@ -2,16 +2,16 @@ import { createBrowserRouter } from 'react-router-dom';
 import { Dashboard } from './pages/Dashboard';
 import App from './App';
 import { LetterApp } from './pages/LetterApp';
-import { Login } from './pages/Login';
+import { LandingPage } from './pages/LandingPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 export const router = createBrowserRouter([
     {
-        path: '/login',
-        element: <Login />,
+        path: '/',
+        element: <LandingPage />,
     },
     {
-        path: '/',
+        path: '/dashboard',
         element: (
             <ProtectedRoute>
                 <Dashboard />
@@ -35,3 +35,4 @@ export const router = createBrowserRouter([
         ),
     },
 ]);
+

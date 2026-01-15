@@ -26,8 +26,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     }
 
     if (!user) {
-        // Redirect to login, but save the intended destination
-        return <Navigate to="/login" state={{ from: location }} replace />;
+        // Redirect to landing page, but save the intended destination
+        return <Navigate to="/" state={{ from: location }} replace />;
     }
 
     return <>{children}</>;
