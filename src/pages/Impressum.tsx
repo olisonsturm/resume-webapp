@@ -23,7 +23,7 @@ export function Impressum() {
 
                 <h2>Kontakt</h2>
                 <p>
-                    E-Mail: olisonsturm@gmx.de
+                    E-Mail: recht@elion-software.de
                 </p>
 
                 <h2>Haftung für Inhalte</h2>
