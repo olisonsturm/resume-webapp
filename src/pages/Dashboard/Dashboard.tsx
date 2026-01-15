@@ -368,12 +368,16 @@ export function Dashboard() {
             <main className="cv-grid">
                 {filteredDocs.map((doc) => {
                     const data = doc.type === 'cv' ? (doc as CVFile).resume : (doc as LetterFile).letterData;
+
+                    // Defensive check: if data is somehow missing, skip rendering content logic or provide defaults
+                    if (!data) return null;
+
                     const candidateName = doc.type === 'cv'
-                        ? ((data as Resume).header?.name)
-                        : ((data as LetterData).sender?.name);
+                        ? ((data as Resume)?.header?.name)
+                        : ((data as LetterData)?.sender?.name);
                     const jobTitle = doc.type === 'cv'
-                        ? ((data as Resume).header?.title)
-                        : ((data as LetterData).sender?.title);
+                        ? ((data as Resume)?.header?.title)
+                        : ((data as LetterData)?.sender?.title);
 
                     return (
                         <div

@@ -41,7 +41,7 @@ export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ d
 
         const maxHeight = Math.max(leftColumnHeight, rightColumnHeight);
         return Math.ceil(maxHeight / PAGE_CONTENT_HEIGHT);
-    }, [experience, education, achievements, certifications, skills, languages]);
+    }, [experience, education, achievements, certifications, languages]);
 
     useEffect(() => {
         setPageCount(calculatePageCount());

@@ -1,3 +1,5 @@
+import type { Resume, Experience, Education } from '../types/resume';
+
 /**
  * Common domain mappings for logos.
  * Focus on SAP-related, German institutions, and large tech companies.
@@ -92,18 +94,18 @@ export const getLogoUrl = (name: string): string => {
 /**
  * Automatically populates logos for all experience and education entries in a resume.
  */
-export const populateResumeLogos = (resume: any) => {
+export const populateResumeLogos = (resume: Resume): Resume => {
     const updatedResume = { ...resume };
 
     if (updatedResume.experience) {
-        updatedResume.experience = updatedResume.experience.map((exp: any) => ({
+        updatedResume.experience = updatedResume.experience.map((exp: Experience) => ({
             ...exp,
             logo: exp.logo || getLogoUrl(exp.workplace)
         }));
     }
 
     if (updatedResume.education) {
-        updatedResume.education = updatedResume.education.map((edu: any) => ({
+        updatedResume.education = updatedResume.education.map((edu: Education) => ({
             ...edu,
             logo: edu.logo || getLogoUrl(edu.institution)
         }));

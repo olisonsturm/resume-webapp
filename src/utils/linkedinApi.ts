@@ -6,6 +6,7 @@ export interface LinkedInScrapResult {
     data: Resume | null;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function scrapeLinkedInProfile(_linkedInUrl: string): Promise<LinkedInScrapResult> {
     // Note: LinkedIn scraping is not supported in serverless due to rate limiting
     // This feature requires the Express server or a different approach

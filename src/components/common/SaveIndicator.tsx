@@ -33,7 +33,8 @@ export function SaveIndicator({ watchData, debounceMs = 1000 }: SaveIndicatorPro
         }
 
         // Set to saving immediately when data changes
-        setStatus('saving');
+        // Use setTimeout to avoid "setting state inside effect" warning
+        setTimeout(() => setStatus('saving'), 0);
 
         // After debounce, show saved (Zustand persist saves automatically)
         timeoutRef.current = setTimeout(() => {
