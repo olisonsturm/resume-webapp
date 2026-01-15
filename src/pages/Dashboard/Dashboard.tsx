@@ -1,27 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, FileText, Trash2, Copy, Edit3, Linkedin, ExternalLink, Loader2, AlertCircle, Upload, Mail, User, LogOut, Cloud, CloudOff } from 'lucide-react';
+import { Plus, FileText, Trash2, Copy, Loader2, AlertCircle, Upload, Mail, User, LogOut, Cloud, CloudOff, Grid } from 'lucide-react';
 import { useResumeStore } from '../../store/resumeStore';
 import type { CVFile } from '../../store/resumeStore';
 import { useLetterStore } from '../../store/letterStore';
 import type { LetterFile } from '../../store/letterStore';
 import { useAuthStore } from '../../store/authStore';
+import { useProfileStore } from '../../store/profileStore';
 import { useCloudSync } from '../../hooks/useCloudSync';
 import { scrapeLinkedInProfile, parseLinkedInPDF, checkServerHealth } from '../../utils/linkedinApi';
 import { populateResumeLogos } from '../../utils/logoUtils';
+import { DocumentPreview } from '../../components/DocumentPreview';
+import { ProfileModal } from '../../components/ProfileModal';
 import './Dashboard.css';
 
 type DocType = 'cv' | 'letter';
-type ActiveTab = 'cvs' | 'letters';
+type ActiveTab = 'all' | 'cvs' | 'letters';
 
 export function Dashboard() {
     const navigate = useNavigate();
     const { cvList, createCV, createCVWithData, deleteCV, duplicateCV, loadCV } = useResumeStore();
-    const { letterList, createLetter, deleteLetter, duplicateLetter, loadLetter } = useLetterStore();
+    const { letterList, createLetter, createLetterWithData, deleteLetter, duplicateLetter, loadLetter } = useLetterStore();
     const { user, signOut } = useAuthStore();
     const { isCloudEnabled, saveCV, saveLetter, deleteCloudCV, deleteCloudLetter } = useCloudSync();
+    const { profile, fetchProfile } = useProfileStore();
 
-    const [activeTab, setActiveTab] = useState<ActiveTab>('cvs');
+    const [activeTab, setActiveTab] = useState<ActiveTab>('all');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [createDocType, setCreateDocType] = useState<DocType>('cv');
     const [newDocName, setNewDocName] = useState('');
@@ -31,13 +35,16 @@ export function Dashboard() {
     const [error, setError] = useState<string | null>(null);
     const [serverStatus, setServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showProfileModal, setShowProfileModal] = useState(false);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         checkServerHealth().then(online => {
             setServerStatus(online ? 'online' : 'offline');
         });
-    }, []);
+        fetchProfile();
+    }, [fetchProfile]);
 
     const handleOpenCV = (id: string) => {
         loadCV(id);
@@ -58,7 +65,28 @@ export function Dashboard() {
         try {
             if (createDocType === 'letter') {
                 // Create Letter
-                const letterId = createLetter(newDocName.trim());
+                let letterId: string;
+
+                // Pre-fill from profile if available
+                if (profile) {
+                    const freshLetter = useLetterStore.getState().letter; // Get empty defaults
+                    const letterData = {
+                        ...freshLetter,
+                        sender: {
+                            ...freshLetter.sender,
+                            name: profile.full_name || freshLetter.sender.name,
+                            title: profile.job_title || freshLetter.sender.title,
+                            email: profile.email || freshLetter.sender.email,
+                            phone: profile.phone || freshLetter.sender.phone,
+                            address: profile.address || freshLetter.sender.address,
+                            location: profile.location || freshLetter.sender.location,
+                            link: profile.website || freshLetter.sender.link,
+                        }
+                    };
+                    letterId = createLetterWithData(newDocName.trim(), letterData);
+                } else {
+                    letterId = createLetter(newDocName.trim());
+                }
 
                 // Save to cloud immediately
                 const newLetter = useLetterStore.getState().letterList.find(l => l.id === letterId);
@@ -71,13 +99,25 @@ export function Dashboard() {
                 loadLetter(letterId);
                 navigate(`/letter/${letterId}`);
             } else {
-                // Create CV (existing logic)
+                // Create CV
                 let cvId: string;
 
                 if (selectedPdf && serverStatus === 'online') {
                     const result = await parseLinkedInPDF(selectedPdf);
                     if (result.success && result.data) {
                         const enrichedData = populateResumeLogos(result.data);
+                        // Merge with profile data if available
+                        if (profile) {
+                            enrichedData.header = {
+                                ...enrichedData.header,
+                                name: profile.full_name || enrichedData.header.name,
+                                title: profile.job_title || enrichedData.header.title,
+                                email: profile.email || enrichedData.header.email,
+                                phone: profile.phone || enrichedData.header.phone,
+                                location: profile.location || enrichedData.header.location,
+                                link: profile.website || enrichedData.header.link,
+                            };
+                        }
                         cvId = createCVWithData(newDocName.trim(), newLinkedInUrl.trim(), enrichedData);
                     } else {
                         setError(result.error || 'Could not parse LinkedIn PDF');
@@ -93,7 +133,52 @@ export function Dashboard() {
                         cvId = createCV(newDocName.trim(), newLinkedInUrl.trim());
                     }
                 } else {
-                    cvId = createCV(newDocName.trim(), newLinkedInUrl.trim() || undefined);
+                    // Manual creation - Fill from Profile
+                    if (profile) {
+                        const freshResume = useResumeStore.getState().resume; // this is current active resume, careful. 
+                        // Better to rely on createCVWithData handling defaults or construct here.
+                        // Actually createCV uses emptyResume. Let's create a fresh empty structure + profile data.
+
+                        // We need to get empty resume structure. Accessing it via creating a dummy logic or importing it?
+                        // Importing `emptyResume` is not exported from store.
+                        // Workaround: We use createCV, then update it immediately? No, that triggers saves.
+                        // Better: createCVWithData with merged data.
+                        // I will assume createCVWithData handles partial or complete overrides.
+                        // Wait, createCVWithData expects full Resume object.
+
+                        // Let's stick to simple createCV for now and then update if profile exists?
+                        // Or better: Let's assume createCV creates a blank one, and we can't easily inject without full object.
+                        // Let's just use createCV, and if we have profile, we load it and update it.
+
+                        cvId = createCV(newDocName.trim(), newLinkedInUrl.trim() || undefined);
+
+                        if (profile) {
+                            const createdCV = useResumeStore.getState().cvList.find(c => c.id === cvId);
+                            if (createdCV) {
+                                const updatedResume = {
+                                    ...createdCV.resume,
+                                    header: {
+                                        ...createdCV.resume.header,
+                                        name: profile.full_name || '',
+                                        title: profile.job_title || '',
+                                        email: profile.email || '',
+                                        phone: profile.phone || '',
+                                        location: profile.location || '',
+                                        link: profile.website || '',
+                                    }
+                                };
+                                // We need a way to update this CV in the list without being "active" yet or set active then update.
+                                // useResumeStore.setState...
+                                // Let's just set it as active and the store will sync on next edit?
+                                // Actually, let's manually update the object in the store list.
+                                useResumeStore.setState(state => ({
+                                    cvList: state.cvList.map(c => c.id === cvId ? { ...c, resume: updatedResume } : c)
+                                }));
+                            }
+                        }
+                    } else {
+                        cvId = createCV(newDocName.trim(), newLinkedInUrl.trim() || undefined);
+                    }
                 }
 
                 // Save to cloud immediately
@@ -130,13 +215,13 @@ export function Dashboard() {
 
     const handleDeleteCV = (id: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (cvList.length === 1) {
-            alert('Letzten CV kann nicht gelöscht werden');
-            return;
+        if (cvList.length === 1 && letterList.length === 0) { // Only protect if it's strictly the last doc? maybe loose restriction
+            // Allow deleting last CV if letters exist?
         }
+
         if (confirm('Diesen CV wirklich löschen?')) {
             deleteCV(id);
-            deleteCloudCV(id); // Also delete from cloud if synced
+            deleteCloudCV(id);
         }
     };
 
@@ -149,7 +234,7 @@ export function Dashboard() {
         e.stopPropagation();
         if (confirm('Dieses Anschreiben wirklich löschen?')) {
             deleteLetter(id);
-            deleteCloudLetter(id); // Also delete from cloud if synced
+            deleteCloudLetter(id);
         }
     };
 
@@ -176,12 +261,27 @@ export function Dashboard() {
         setShowCreateModal(true);
     };
 
+    // Unified list for "All" tab
+    const getAllDocuments = () => {
+        const cvs = cvList.map(cv => ({ ...cv, type: 'cv' as const }));
+        const letters = letterList.map(l => ({ ...l, type: 'letter' as const }));
+        return [...cvs, ...letters].sort((a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        );
+    };
+
+    const filteredDocs = activeTab === 'all'
+        ? getAllDocuments()
+        : activeTab === 'cvs'
+            ? cvList.map(cv => ({ ...cv, type: 'cv' as const }))
+            : letterList.map(l => ({ ...l, type: 'letter' as const }));
+
     return (
         <div className="dashboard">
             <header className="dashboard-header">
                 <div className="header-content">
                     <h1>Dokumente</h1>
-                    <p className="subtitle">CVs und Anschreiben verwalten</p>
+                    <p className="subtitle">Verwalte deine Karriere-Dokumente</p>
                 </div>
                 <div className="create-buttons">
                     <button className="btn btn-secondary" onClick={() => openCreateModal('letter')}>
@@ -206,7 +306,7 @@ export function Dashboard() {
                             <CloudOff size={16} className="cloud-icon offline" />
                         )}
                         <User size={20} />
-                        <span className="user-email">{user?.email?.split('@')[0] || 'User'}</span>
+                        <span className="user-email">{profile?.full_name || user?.email?.split('@')[0] || 'User'}</span>
                     </button>
 
                     {showUserMenu && (
@@ -217,6 +317,13 @@ export function Dashboard() {
                                     {isCloudEnabled ? '☁️ Cloud Sync Active' : '💾 Local Only'}
                                 </span>
                             </div>
+                            <button
+                                className="dropdown-item"
+                                onClick={() => { setShowProfileModal(true); setShowUserMenu(false); }}
+                            >
+                                <User size={16} />
+                                Profil bearbeiten
+                            </button>
                             <button
                                 className="dropdown-item logout"
                                 onClick={() => { signOut(); setShowUserMenu(false); }}
@@ -229,99 +336,96 @@ export function Dashboard() {
                 </div>
             </header>
 
-            {/* Tabs */}
-            <div className="tabs">
-                <button
-                    className={`tab ${activeTab === 'cvs' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('cvs')}
-                >
-                    <FileText size={16} />
-                    CVs ({cvList.length})
-                </button>
-                <button
-                    className={`tab ${activeTab === 'letters' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('letters')}
-                >
-                    <Mail size={16} />
-                    Anschreiben ({letterList.length})
-                </button>
+            {/* V2 Controls: Tabs & View Toggle */}
+            <div className="dashboard-controls">
+                <div className="tabs">
+                    <button
+                        className={`tab ${activeTab === 'all' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('all')}
+                    >
+                        <Grid size={16} />
+                        Alle
+                    </button>
+                    <button
+                        className={`tab ${activeTab === 'cvs' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('cvs')}
+                    >
+                        <FileText size={16} />
+                        Lebensläufe
+                    </button>
+                    <button
+                        className={`tab ${activeTab === 'letters' ? 'active' : ''}`}
+                        onClick={() => setActiveTab('letters')}
+                    >
+                        <Mail size={16} />
+                        Anschreiben
+                    </button>
+                </div>
             </div>
 
             <main className="cv-grid">
-                {activeTab === 'cvs' && cvList.map((cv: CVFile) => (
-                    <div key={cv.id} className="cv-card" onClick={() => handleOpenCV(cv.id)}>
-                        <div className="cv-card-preview">
-                            <FileText size={48} />
-                        </div>
-                        <div className="cv-card-content">
-                            <h3 className="cv-name">{cv.name}</h3>
-                            {cv.linkedInUrl && (
-                                <a
-                                    href={cv.linkedInUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="linkedin-link"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <Linkedin size={14} />
-                                    LinkedIn
-                                    <ExternalLink size={12} />
-                                </a>
-                            )}
-                            <div className="cv-meta">
-                                <span>Erstellt: {formatDate(cv.createdAt)}</span>
-                                <span>Geändert: {formatDate(cv.updatedAt)}</span>
+                {filteredDocs.map((doc) => (
+                    <div
+                        key={`${doc.type}-${doc.id}`}
+                        className={`cv-card ${doc.type === 'letter' ? 'letter-card' : ''}`}
+                        onClick={() => doc.type === 'cv' ? handleOpenCV(doc.id) : handleOpenLetter(doc.id)}
+                    >
+                        <div className="cv-card-preview-container">
+                            <DocumentPreview
+                                type={doc.type}
+                                data={doc.type === 'cv' ? (doc as CVFile).resume : (doc as LetterFile).letterData}
+                            />
+                            {/* Overlay on hover is handled by CSS or Click */}
+                            <div className="preview-overlay">
+                                <span className="open-btn">Öffnen</span>
                             </div>
                         </div>
+
+                        <div className="cv-card-content">
+                            <div className="flex items-center gap-2 mb-1">
+                                {doc.type === 'cv' ? <FileText size={14} className="text-blue-400" /> : <Mail size={14} className="text-purple-400" />}
+                                <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">{doc.type === 'cv' ? 'Lebenslauf' : 'Anschreiben'}</span>
+                            </div>
+                            <h3 className="cv-name" title={doc.name}>{doc.name}</h3>
+                            <div className="cv-meta">
+                                <span>Geändert: {formatDate(doc.updatedAt)}</span>
+                            </div>
+                        </div>
+
                         <div className="cv-card-actions">
-                            <button className="action-btn" onClick={(e) => handleDuplicateCV(cv.id, e)} title="Duplizieren">
+                            <button
+                                className="action-btn"
+                                onClick={(e) => doc.type === 'cv' ? handleDuplicateCV(doc.id, e) : handleDuplicateLetter(doc.id, e)}
+                                title="Duplizieren"
+                            >
                                 <Copy size={16} />
                             </button>
-                            <button className="action-btn edit" onClick={() => handleOpenCV(cv.id)} title="Bearbeiten">
-                                <Edit3 size={16} />
-                            </button>
-                            <button className="action-btn delete" onClick={(e) => handleDeleteCV(cv.id, e)} title="Löschen">
+                            <button
+                                className="action-btn delete"
+                                onClick={(e) => doc.type === 'cv' ? handleDeleteCV(doc.id, e) : handleDeleteLetter(doc.id, e)}
+                                title="Löschen"
+                            >
                                 <Trash2 size={16} />
                             </button>
                         </div>
                     </div>
                 ))}
 
-                {activeTab === 'letters' && letterList.map((letter: LetterFile) => (
-                    <div key={letter.id} className="cv-card letter-card" onClick={() => handleOpenLetter(letter.id)}>
-                        <div className="cv-card-preview letter-preview">
-                            <Mail size={48} />
-                        </div>
-                        <div className="cv-card-content">
-                            <h3 className="cv-name">{letter.name}</h3>
-                            <div className="cv-meta">
-                                <span>Erstellt: {formatDate(letter.createdAt)}</span>
-                                <span>Geändert: {formatDate(letter.updatedAt)}</span>
-                            </div>
-                        </div>
-                        <div className="cv-card-actions">
-                            <button className="action-btn" onClick={(e) => handleDuplicateLetter(letter.id, e)} title="Duplizieren">
-                                <Copy size={16} />
+                {filteredDocs.length === 0 && (
+                    <div className="empty-state col-span-full">
+                        {activeTab === 'letters' ? <Mail size={48} /> : <FileText size={48} />}
+                        <h3>Keine Dokumente gefunden</h3>
+                        <p>Erstellen Sie jetzt Ihr erstes Dokument für Ihre Bewerbung.</p>
+                        <div className="flex gap-4 justify-center mt-4">
+                            <button className="btn btn-primary" onClick={() => openCreateModal('cv')}>
+                                <Plus size={16} />
+                                CV erstellen
                             </button>
-                            <button className="action-btn edit" onClick={() => handleOpenLetter(letter.id)} title="Bearbeiten">
-                                <Edit3 size={16} />
-                            </button>
-                            <button className="action-btn delete" onClick={(e) => handleDeleteLetter(letter.id, e)} title="Löschen">
-                                <Trash2 size={16} />
+                            <button className="btn btn-secondary" onClick={() => openCreateModal('letter')}>
+                                <Plus size={16} />
+                                Anschreiben
                             </button>
                         </div>
-                    </div>
-                ))}
-
-                {activeTab === 'letters' && letterList.length === 0 && (
-                    <div className="empty-state">
-                        <Mail size={48} />
-                        <h3>Noch keine Anschreiben</h3>
-                        <p>Erstellen Sie Ihr erstes Anschreiben</p>
-                        <button className="btn btn-primary" onClick={() => openCreateModal('letter')}>
-                            <Plus size={16} />
-                            Anschreiben erstellen
-                        </button>
                     </div>
                 )}
             </main>
@@ -332,7 +436,6 @@ export function Dashboard() {
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <h2>{createDocType === 'cv' ? 'Neuen CV erstellen' : 'Neues Anschreiben erstellen'}</h2>
 
-                        {/* Doc Type Selector */}
                         <div className="doc-type-selector">
                             <button
                                 className={`doc-type-btn ${createDocType === 'cv' ? 'active' : ''}`}
@@ -358,24 +461,23 @@ export function Dashboard() {
                         )}
 
                         <div className="form-group">
-                            <label>{createDocType === 'cv' ? 'CV Name' : 'Anschreiben Name'} *</label>
+                            <label>{createDocType === 'cv' ? 'Name des Dokuments' : 'Betreff / Name'} *</label>
                             <input
                                 type="text"
                                 value={newDocName}
                                 onChange={(e) => setNewDocName(e.target.value)}
-                                placeholder={createDocType === 'cv' ? 'z.B. Mein Lebenslauf' : 'z.B. Bewerbung SAP'}
+                                placeholder={createDocType === 'cv' ? 'z.B. Mein Lebenslauf 2024' : 'z.B. Bewerbung bei SAP'}
                                 autoFocus
                                 disabled={isLoading}
                             />
                         </div>
 
-                        {/* CV-specific options */}
                         {createDocType === 'cv' && (
                             <div className="import-options">
                                 <div className="form-group">
                                     <label>
                                         <Upload size={16} />
-                                        LinkedIn PDF (Empfohlen)
+                                        LinkedIn PDF Importieren
                                     </label>
                                     <div className="file-upload-row">
                                         <input
@@ -391,34 +493,9 @@ export function Dashboard() {
                                             disabled={isLoading}
                                         >
                                             <Upload size={14} />
-                                            {selectedPdf ? selectedPdf.name : 'LinkedIn PDF wählen...'}
+                                            {selectedPdf ? selectedPdf.name : 'PDF auswählen...'}
                                         </button>
                                     </div>
-                                    <p className="form-hint">
-                                        Exportieren Sie Ihr LinkedIn-Profil als PDF und laden Sie es hier hoch.
-                                    </p>
-                                </div>
-
-                                <div className="divider"><span>ODER</span></div>
-
-                                <div className="form-group">
-                                    <label>
-                                        <Linkedin size={16} />
-                                        LinkedIn Profil URL
-                                        {serverStatus === 'online' && (
-                                            <span className="server-status online">● Online</span>
-                                        )}
-                                        {serverStatus === 'offline' && (
-                                            <span className="server-status offline">● Offline</span>
-                                        )}
-                                    </label>
-                                    <input
-                                        type="url"
-                                        value={newLinkedInUrl}
-                                        onChange={(e) => setNewLinkedInUrl(e.target.value)}
-                                        placeholder="https://www.linkedin.com/in/yourprofile/"
-                                        disabled={isLoading || !!selectedPdf}
-                                    />
                                 </div>
                             </div>
                         )}
@@ -442,13 +519,18 @@ export function Dashboard() {
                                         Erstelle...
                                     </>
                                 ) : (
-                                    createDocType === 'cv' ? 'CV erstellen' : 'Anschreiben erstellen'
+                                    'Erstellen'
                                 )}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
+
+            <ProfileModal
+                isOpen={showProfileModal}
+                onClose={() => setShowProfileModal(false)}
+            />
         </div>
     );
 }

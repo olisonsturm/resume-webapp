@@ -114,3 +114,53 @@ CREATE INDEX IF NOT EXISTS cvs_user_id_idx ON cvs(user_id);
 CREATE INDEX IF NOT EXISTS cvs_updated_at_idx ON cvs(updated_at DESC);
 CREATE INDEX IF NOT EXISTS letters_user_id_idx ON letters(user_id);
 CREATE INDEX IF NOT EXISTS letters_updated_at_idx ON letters(updated_at DESC);
+
+-- ============================================
+-- PROFILES TABLE
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name TEXT,
+  job_title TEXT,
+  email TEXT,
+  phone TEXT,
+  address TEXT,
+  location TEXT,
+  website TEXT,
+  avatar_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- Profiles Policies
+CREATE POLICY "Users can view their own profile"
+  ON profiles FOR SELECT
+  USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert their own profile"
+  ON profiles FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Users can update their own profile"
+  ON profiles FOR UPDATE
+  USING (auth.uid() = id);
+
+-- Function to handle new user signup (auto-create profile)
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name)
+  VALUES (new.id, new.email, new.raw_user_meta_data->>'full_name');
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger to call the function on signup
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();

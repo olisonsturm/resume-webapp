@@ -1,13 +1,19 @@
 import { forwardRef, useEffect, useState, useCallback } from 'react';
 import { useActiveResume } from '../../store/resumeStore';
 import { Phone, Mail, MapPin, Link as LinkIcon, Calendar, Diamond } from 'lucide-react';
+import type { Resume } from '../../types/resume';
 import './ResumePreview.css';
 
 // A4 page content height in pixels
 const PAGE_CONTENT_HEIGHT = 1000;
 
-export const ResumePreview = forwardRef<HTMLDivElement>((_, ref) => {
-    const resume = useActiveResume();
+interface ResumePreviewProps {
+    data?: Resume;
+}
+
+export const ResumePreview = forwardRef<HTMLDivElement, ResumePreviewProps>(({ data }, ref) => {
+    const storeResume = useActiveResume();
+    const resume = data || storeResume;
     const { header, experience, education, achievements, certifications, skills, languages } = resume;
     const [pageCount, setPageCount] = useState(1);
 

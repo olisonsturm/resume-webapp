@@ -1,10 +1,16 @@
 import { forwardRef } from 'react';
 import { Phone, Mail, MapPin, Link as LinkIcon } from 'lucide-react';
 import { useActiveLetter } from '../../store/letterStore';
+import type { LetterData } from '../../types/letter';
 import './LetterPreview.css';
 
-export const LetterPreview = forwardRef<HTMLDivElement>((_, ref) => {
-    const letter = useActiveLetter();
+interface LetterPreviewProps {
+    data?: LetterData;
+}
+
+export const LetterPreview = forwardRef<HTMLDivElement, LetterPreviewProps>(({ data }, ref) => {
+    const storeLetter = useActiveLetter();
+    const letter = data || storeLetter;
     const { sender, recipient, letterType } = letter;
 
     // For motivation letters, use a simpler layout without formal business letter structure

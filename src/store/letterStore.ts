@@ -42,6 +42,7 @@ interface LetterStore {
 
     // CRUD
     createLetter: (name: string) => string;
+    createLetterWithData: (name: string, data: LetterData) => string;
     deleteLetter: (id: string) => void;
     loadLetter: (id: string) => void;
     duplicateLetter: (id: string) => string;
@@ -106,7 +107,20 @@ export const useLetterStore = create<LetterStore>()(
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString(),
                 };
-                set(state => ({ letterList: [...state.letterList, newLetter] }));
+                set(state => ({ letterList: [newLetter, ...state.letterList] }));
+                return id;
+            },
+
+            createLetterWithData: (name, data) => {
+                const id = crypto.randomUUID();
+                const newLetter: LetterFile = {
+                    id,
+                    name,
+                    letterData: data,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                };
+                set(state => ({ letterList: [newLetter, ...state.letterList] }));
                 return id;
             },
 
