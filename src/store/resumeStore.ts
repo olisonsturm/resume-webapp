@@ -169,7 +169,7 @@ const initialResume: Resume = {
 
 // Initial CV file with preserved data
 const initialCVFile: CVFile = {
-    id: 'cv-1',
+    id: 'c0000000-0000-0000-0000-000000000001',
     name: 'Olison Sturm Resume',
     linkedInUrl: 'https://www.linkedin.com/in/olisonsturm/',
     resume: initialResume,
@@ -244,7 +244,7 @@ export const useResumeStore = create<CVStore>()(
     persist(
         (set, get) => ({
             cvList: [initialCVFile],
-            activeCvId: 'cv-1',
+            activeCvId: 'c0000000-0000-0000-0000-000000000001',
 
             get resume() {
                 const state = get();
@@ -256,7 +256,7 @@ export const useResumeStore = create<CVStore>()(
             },
 
             createCV: (name, linkedInUrl) => {
-                const id = `cv-${Date.now()}`;
+                const id = crypto.randomUUID();
                 // Deep clone to ensure completely empty resume (no shared references)
                 const freshResume = JSON.parse(JSON.stringify(emptyResume));
                 const newCV: CVFile = {
@@ -272,7 +272,7 @@ export const useResumeStore = create<CVStore>()(
             },
 
             createCVWithData: (name, linkedInUrl, resumeData) => {
-                const id = `cv-${Date.now()}`;
+                const id = crypto.randomUUID();
                 const newCV: CVFile = {
                     id,
                     name,
@@ -301,7 +301,7 @@ export const useResumeStore = create<CVStore>()(
                 const source = state.cvList.find(cv => cv.id === id);
                 if (!source) return id;
 
-                const newId = `cv-${Date.now()}`;
+                const newId = crypto.randomUUID();
                 const duplicate: CVFile = {
                     ...source,
                     id: newId,

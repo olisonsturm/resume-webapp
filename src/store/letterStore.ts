@@ -97,7 +97,7 @@ export const useLetterStore = create<LetterStore>()(
             },
 
             createLetter: (name) => {
-                const id = `letter-${Date.now()}`;
+                const id = crypto.randomUUID();
                 const freshLetter = JSON.parse(JSON.stringify(emptyLetter));
                 const newLetter: LetterFile = {
                     id,
@@ -126,7 +126,7 @@ export const useLetterStore = create<LetterStore>()(
                 const source = state.letterList.find(l => l.id === id);
                 if (!source) return id;
 
-                const newId = `letter-${Date.now()}`;
+                const newId = crypto.randomUUID();
                 const duplicate: LetterFile = {
                     ...source,
                     id: newId,
