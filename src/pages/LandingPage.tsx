@@ -1,15 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-    FileText,
-    Download,
-    Sparkles,
-    Shield,
-    Zap,
-    ArrowRight,
-    Github,
-    Check
-} from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { FileText, Zap, Shield, Github, Sparkles, Download, ArrowRight, Check } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import './LandingPage.css';
 
@@ -199,11 +190,17 @@ export function LandingPage() {
 
             {/* Footer */}
             <footer className="landing-footer">
-                <div className="footer-brand">
-                    <FileText size={20} />
-                    <span>applyro</span>
+                <div className="footer-content">
+                    <div className="footer-brand">
+                        <FileText size={20} />
+                        <span>applyro</span>
+                    </div>
+                    <div className="footer-links">
+                        <Link to="/impressum">Impressum</Link>
+                        <Link to="/datenschutz">Datenschutz</Link>
+                    </div>
+                    <p>© 2026 <a href="https://elion-software.de" target="_blank" rel="noopener noreferrer">Elion Software</a>. Mit ❤️ erstellt.</p>
                 </div>
-                <p>© 2026 <a href="https://elion-software.de" target="_blank" rel="noopener noreferrer">Elion Software</a>. Mit ❤️ erstellt.</p>
             </footer>
 
             {/* Auth Modal */}
