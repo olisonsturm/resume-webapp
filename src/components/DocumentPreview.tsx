@@ -8,30 +8,21 @@ interface DocumentPreviewProps {
     type: 'cv' | 'letter';
     data: Resume | LetterData;
     className?: string;
-    height?: number; // Optional fixed height in pixels
 }
 
-export function DocumentPreview({ type, data, className = '', height }: DocumentPreviewProps) {
+export function DocumentPreview({ type, data, className = '' }: DocumentPreviewProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [scale, setScale] = useState(0.3);
 
-    // Calculate scale to fit container
+    // Calculate scale to fit container width
     useEffect(() => {
         const updateScale = () => {
             if (containerRef.current) {
                 const containerWidth = containerRef.current.clientWidth;
-                // If height is provided, use it; otherwise fallback to A4 ratio based on width
-                const targetHeight = height || (containerWidth * 1.414);
+                const standardWidth = 794; // A4 px width
 
-                const standardWidth = 794;
-                const standardHeight = 1123;
-
-                // Calculate scale to fit CONTAIN within the box
-                const scaleW = containerWidth / standardWidth;
-                const scaleH = targetHeight / standardHeight;
-
-                // Use the smaller scale to ensure it fits entirely
-                const newScale = Math.min(scaleW, scaleH);
+                // Always fit to width
+                const newScale = containerWidth / standardWidth;
 
                 setScale(newScale);
             }
@@ -47,18 +38,17 @@ export function DocumentPreview({ type, data, className = '', height }: Document
         }
 
         return () => resizeObserver.disconnect();
-    }, [height]);
+    }, []);
 
     return (
         <div
             ref={containerRef}
             className={`relative bg-white overflow-hidden rounded-t-lg ${className}`}
             style={{
-                height: height ? `${height}px` : 0,
-                paddingBottom: height ? 0 : '141.4%', // Aspect ratio of A4 if no height set
-                display: 'flex',
-                justifyContent: 'center', // Center horizontally
-                alignItems: 'flex-start', // Top align
+                height: 0,
+                paddingBottom: '70%', // Aspect ratio (approx 50% of A4 height)
+                // A4 is 141.4%. Half is 70.7%. 
+                // This ensures we always show the top half scaled to width.
             }}
         >
             {/* 
@@ -77,7 +67,7 @@ export function DocumentPreview({ type, data, className = '', height }: Document
                     width: '794px', // Force expected width of A4
                     height: '1123px', // Force expected height of A4
                     transform: `scale(${scale})`,
-                    transformOrigin: 'top center', // Scale from top center to keep centered
+                    transformOrigin: 'top left', // Scale from top left so it fills the width
                     pointerEvents: 'none', // Prevent interaction with preview
                     userSelect: 'none',
                 }}
@@ -89,8 +79,7 @@ export function DocumentPreview({ type, data, className = '', height }: Document
                 )}
             </div>
 
-            {/* Gradient overlay to make it look nicer at the bottom (fade out) */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/10 to-transparent pointer-events-none" />
+            {/* Gradient overlay removed to keep it clean white/blue */}
         </div>
     );
 }

@@ -374,7 +374,6 @@ export function Dashboard() {
                             <DocumentPreview
                                 type={doc.type}
                                 data={doc.type === 'cv' ? (doc as CVFile).resume : (doc as LetterFile).letterData}
-                                height={280}
                             />
                             {/* Overlay on hover is handled by CSS or Click */}
                             <div className="preview-overlay">
