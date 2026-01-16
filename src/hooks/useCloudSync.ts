@@ -6,6 +6,9 @@ import { useAuthStore } from '../store/authStore';
 import type { Resume } from '../types/resume';
 import type { LetterData } from '../types/letter';
 
+// Global sync state - persists across hook instances
+let globalSyncedUserId: string | null = null;
+
 // Debounce helper with flush support
 function createDebouncedFn<T extends unknown[]>(fn: (...args: T) => void, delay: number) {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -40,7 +43,7 @@ function createDebouncedFn<T extends unknown[]>(fn: (...args: T) => void, delay:
  */
 export function useCloudSync() {
     const { user } = useAuthStore();
-    const syncedRef = useRef(false);
+
     const lastSyncRef = useRef<string>('');
     const [isLoading, setIsLoading] = useState(true);
 
@@ -51,9 +54,15 @@ export function useCloudSync() {
             return;
         }
 
+        // Skip if already synced for this user (prevents clearing data on navigation)
+        if (globalSyncedUserId === user.id) {
+            setIsLoading(false);
+            return;
+        }
+
         try {
             setIsLoading(true);
-            // CRITICAL: Clear local data first to prevent showing previous user's data
+            // Clear local data when syncing for a NEW user
             useResumeStore.setState({ cvList: [], activeCvId: null });
             useLetterStore.setState({ letterList: [], activeLetterId: null });
 
@@ -100,7 +109,7 @@ export function useCloudSync() {
                 }
             }
 
-            syncedRef.current = true;
+            globalSyncedUserId = user.id;
         } catch (error) {
             console.error('Error loading from cloud:', error);
         } finally {
@@ -181,7 +190,7 @@ export function useCloudSync() {
 
     // Load from cloud when user logs in
     useEffect(() => {
-        if (user && !syncedRef.current) {
+        if (user && globalSyncedUserId !== user.id) {
             loadFromCloud();
         }
     }, [user, loadFromCloud]);
