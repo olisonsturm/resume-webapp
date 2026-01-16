@@ -19,18 +19,18 @@ interface Section {
     component: React.ReactNode;
 }
 
+const sections: Section[] = [
+    { id: 'header', title: 'Personal Details', icon: <User size={18} />, component: <HeaderEditor /> },
+    { id: 'experience', title: 'Experience', icon: <Briefcase size={18} />, component: <ExperienceEditor /> },
+    { id: 'education', title: 'Education', icon: <GraduationCap size={18} />, component: <EducationEditor /> },
+    { id: 'achievements', title: 'Key Achievements', icon: <Award size={18} />, component: <AchievementsEditor /> },
+    { id: 'skills', title: 'Skills', icon: <Wrench size={18} />, component: <SkillsEditor /> },
+    { id: 'languages', title: 'Languages', icon: <Languages size={18} />, component: <LanguagesEditor /> },
+    { id: 'certifications', title: 'Certifications', icon: <BadgeCheck size={18} />, component: <CertificationsEditor /> },
+];
+
 export function EditorLayout() {
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['header']));
-
-    const sections: Section[] = [
-        { id: 'header', title: 'Personal Details', icon: <User size={18} />, component: <HeaderEditor /> },
-        { id: 'experience', title: 'Experience', icon: <Briefcase size={18} />, component: <ExperienceEditor /> },
-        { id: 'education', title: 'Education', icon: <GraduationCap size={18} />, component: <EducationEditor /> },
-        { id: 'achievements', title: 'Key Achievements', icon: <Award size={18} />, component: <AchievementsEditor /> },
-        { id: 'skills', title: 'Skills', icon: <Wrench size={18} />, component: <SkillsEditor /> },
-        { id: 'languages', title: 'Languages', icon: <Languages size={18} />, component: <LanguagesEditor /> },
-        { id: 'certifications', title: 'Certifications', icon: <BadgeCheck size={18} />, component: <CertificationsEditor /> },
-    ];
 
     const toggleSection = (id: string) => {
         setExpandedSections((prev) => {
