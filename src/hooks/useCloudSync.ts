@@ -214,9 +214,23 @@ export function useCloudSync() {
         }
     }, [user]);
 
+    // Use refs to always have access to the latest save functions (avoids stale closure)
+    const saveCVRef = useRef(saveCV);
+    const saveLetterRef = useRef(saveLetter);
+
+    // Keep refs updated when callbacks change
+    useEffect(() => {
+        saveCVRef.current = saveCV;
+    }, [saveCV]);
+
+    useEffect(() => {
+        saveLetterRef.current = saveLetter;
+    }, [saveLetter]);
+
     // Debounced save for real-time editing with flush support
-    const debouncedSaveCV = useRef(createDebouncedFn((cv: CVFile) => saveCV(cv), 1500)).current;
-    const debouncedSaveLetter = useRef(createDebouncedFn((letter: LetterFile) => saveLetter(letter), 1500)).current;
+    // Uses refs so it always calls the latest version of saveCV/saveLetter
+    const debouncedSaveCV = useRef(createDebouncedFn((cv: CVFile) => saveCVRef.current(cv), 1500)).current;
+    const debouncedSaveLetter = useRef(createDebouncedFn((letter: LetterFile) => saveLetterRef.current(letter), 1500)).current;
 
     // Load from cloud when user logs in
     useEffect(() => {
