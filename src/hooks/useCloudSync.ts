@@ -9,6 +9,32 @@ import type { LetterData } from '../types/letter';
 // Global sync state - persists across hook instances
 let globalSyncedUserId: string | null = null;
 
+// Default empty resume for corrupted database entries
+const defaultEmptyResume: Resume = {
+    header: { name: '', title: '', phone: '', email: '', location: '', link: '', photo: '' },
+    experience: [],
+    education: [],
+    achievements: [],
+    certifications: [],
+    skills: [],
+    languages: [],
+};
+
+// Safely parse resume data from database, providing fallback for corrupted entries
+function safeParseResume(resumeData: unknown): Resume {
+    if (!resumeData || typeof resumeData !== 'object') {
+        console.warn('CV has invalid resume_data, using empty resume');
+        return { ...defaultEmptyResume };
+    }
+    const data = resumeData as Record<string, unknown>;
+    // Check if essential structure exists
+    if (!data.header || typeof data.header !== 'object') {
+        console.warn('CV has missing header, using empty resume');
+        return { ...defaultEmptyResume };
+    }
+    return resumeData as Resume;
+}
+
 // Debounce helper with flush support
 function createDebouncedFn<T extends unknown[]>(fn: (...args: T) => void, delay: number) {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -78,7 +104,7 @@ export function useCloudSync() {
                     id: cv.id,
                     name: cv.name,
                     linkedInUrl: cv.linkedin_url || undefined,
-                    resume: cv.resume_data as Resume,
+                    resume: safeParseResume(cv.resume_data),
                     createdAt: cv.created_at,
                     updatedAt: cv.updated_at
                 }));

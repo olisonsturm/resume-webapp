@@ -231,9 +231,11 @@ const updateActiveResume = (
     return state.cvList.map(cv => {
         if (cv.id === state.activeCvId) {
             console.log('[DEBUG] Found active CV, updating');
+            // Defensive: ensure resume has valid structure, fallback to empty if corrupted
+            const safeResume = (cv.resume && cv.resume.header) ? cv.resume : emptyResume;
             return {
                 ...cv,
-                resume: updater(cv.resume),
+                resume: updater(safeResume),
                 updatedAt: new Date().toISOString(),
             };
         }
