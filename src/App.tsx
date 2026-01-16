@@ -44,6 +44,24 @@ function App() {
     };
   }, [flushPendingSaves]);
 
+  // DEBUG: Global Store Logger
+  useEffect(() => {
+    const unsub = useResumeStore.subscribe((state, prevState) => {
+      const activeIdx = state.cvList.findIndex(cv => cv.id === state.activeCvId);
+      const prevActiveIdx = prevState.cvList.findIndex(cv => cv.id === prevState.activeCvId);
+
+      console.log('[DEBUG-STORE] Store Update:', {
+        activeId: state.activeCvId,
+        prevActiveId: prevState.activeCvId,
+        activeCvName: activeIdx !== -1 ? state.cvList[activeIdx].resume.header.name : 'NOT FOUND',
+        prevActiveCvName: prevActiveIdx !== -1 ? prevState.cvList[prevActiveIdx].resume.header.name : 'NOT FOUND',
+        isSameListObject: state.cvList === prevState.cvList,
+        stack: new Error().stack
+      });
+    });
+    return unsub;
+  }, []);
+
   const currentCV = cvList.find(cv => cv.id === id);
 
   const handleExportPDF = async () => {
