@@ -37,7 +37,7 @@ export const useProfileStore = create<ProfileStore>((set) => ({
                 .from('profiles')
                 .select('*')
                 .eq('id', user.id)
-                .single();
+                .maybeSingle();
 
             if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
                 console.error('Error fetching profile:', error);
