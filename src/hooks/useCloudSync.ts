@@ -70,7 +70,7 @@ function createDebouncedFn<T extends unknown[]>(fn: (...args: T) => void, delay:
 export function useCloudSync() {
     const { user } = useAuthStore();
 
-    const lastSyncRef = useRef<string>('');
+
     // Start with loading=false if user is already synced, otherwise true
     const [isLoading, setIsLoading] = useState(() => {
         if (!user) return false;
@@ -229,15 +229,19 @@ export function useCloudSync() {
     useEffect(() => {
         if (!isSupabaseConfigured() || !user) return;
 
-        const unsubscribe = useResumeStore.subscribe((state, prevState) => {
-            const activeCV = state.cvList.find(cv => cv.id === state.activeCvId);
-            const prevActiveCV = prevState.cvList.find(cv => cv.id === prevState.activeCvId);
+        // Track last synced hash per CV to avoid double syncs
+        let lastCvHashMap: Record<string, string> = {};
 
-            // Only sync if content changed, not just selection
-            if (activeCV && prevActiveCV && state.activeCvId === prevState.activeCvId) {
+        const unsubscribe = useResumeStore.subscribe((state) => {
+            const activeCV = state.cvList.find(cv => cv.id === state.activeCvId);
+
+            // Sync if we have an active CV and its content differs from last sync
+            if (activeCV) {
                 const currentHash = JSON.stringify(activeCV.resume);
-                if (currentHash !== lastSyncRef.current) {
-                    lastSyncRef.current = currentHash;
+                const lastHash = lastCvHashMap[activeCV.id] || '';
+
+                if (currentHash !== lastHash) {
+                    lastCvHashMap[activeCV.id] = currentHash;
                     debouncedSaveCV(activeCV);
                 }
             }

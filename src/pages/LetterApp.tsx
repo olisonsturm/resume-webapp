@@ -66,8 +66,8 @@ export function LetterApp() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-screen bg-slate-900">
-                <Loader2 size={40} className="animate-spin text-blue-500" />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'var(--color-bg)' }}>
+                <Loader2 size={40} className="spin" style={{ color: 'var(--color-primary)' }} />
             </div>
         );
     }
