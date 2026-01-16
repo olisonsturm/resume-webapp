@@ -108,7 +108,7 @@ export function useCloudSync() {
                     id: cv.id,
                     name: cv.name,
                     linkedInUrl: cv.linkedin_url || undefined,
-                    resume: safeParseResume(cv.resume_data),
+                    resume: safeParseResume(cv.resume),
                     createdAt: cv.created_at,
                     updatedAt: cv.updated_at
                 }));
@@ -159,7 +159,7 @@ export function useCloudSync() {
                     user_id: user.id,
                     name: cv.name,
                     linkedin_url: cv.linkedInUrl || null,
-                    resume_data: cv.resume,
+                    resume: cv.resume,
                     created_at: cv.createdAt,
                     updated_at: new Date().toISOString(),
                 });
