@@ -53,10 +53,9 @@ function App() {
       console.log('[DEBUG-STORE] Store Update:', {
         activeId: state.activeCvId,
         prevActiveId: prevState.activeCvId,
-        activeCvName: activeIdx !== -1 ? state.cvList[activeIdx].resume.header.name : 'NOT FOUND',
-        prevActiveCvName: prevActiveIdx !== -1 ? prevState.cvList[prevActiveIdx].resume.header.name : 'NOT FOUND',
+        activeCvName: activeIdx !== -1 ? state.cvList[activeIdx]?.resume?.header?.name : 'NOT FOUND',
+        prevActiveCvName: prevActiveIdx !== -1 ? prevState.cvList[prevActiveIdx]?.resume?.header?.name : 'NOT FOUND',
         isSameListObject: state.cvList === prevState.cvList,
-        stack: new Error().stack
       });
     });
     return unsub;

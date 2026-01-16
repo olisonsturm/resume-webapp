@@ -71,7 +71,11 @@ export function useCloudSync() {
     const { user } = useAuthStore();
 
     const lastSyncRef = useRef<string>('');
-    const [isLoading, setIsLoading] = useState(true);
+    // Start with loading=false if user is already synced, otherwise true
+    const [isLoading, setIsLoading] = useState(() => {
+        if (!user) return false;
+        return globalSyncedUserId !== user.id;
+    });
 
     // Load data from cloud on mount/login
     const loadFromCloud = useCallback(async () => {
