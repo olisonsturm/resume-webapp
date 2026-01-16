@@ -223,13 +223,14 @@ const getActiveResume = (state: { cvList: CVFile[]; activeCvId: string | null })
     return cv?.resume || emptyResume;
 };
 
-// Helper to update active CV's resume
 const updateActiveResume = (
     state: { cvList: CVFile[]; activeCvId: string | null },
     updater: (resume: Resume) => Resume
 ): CVFile[] => {
+    console.log('[DEBUG] updateActiveResume', { activeCvId: state.activeCvId, listCount: state.cvList.length });
     return state.cvList.map(cv => {
         if (cv.id === state.activeCvId) {
+            console.log('[DEBUG] Found active CV, updating');
             return {
                 ...cv,
                 resume: updater(cv.resume),

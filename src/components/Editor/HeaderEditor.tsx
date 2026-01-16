@@ -6,6 +6,7 @@ import { Camera, Loader2 } from 'lucide-react';
 import './HeaderEditor.css';
 
 export function HeaderEditor() {
+    console.log('[DEBUG] HeaderEditor Render');
     const { updateHeader } = useResumeStore();
     const resume = useActiveResume();
     const { header } = resume;
@@ -76,7 +77,10 @@ export function HeaderEditor() {
                 <input
                     type="text"
                     value={header.name}
-                    onChange={(e) => updateHeader({ name: e.target.value })}
+                    onChange={(e) => {
+                        console.log('[DEBUG] Name changed to:', e.target.value);
+                        updateHeader({ name: e.target.value });
+                    }}
                     placeholder="Your full name"
                 />
             </div>
