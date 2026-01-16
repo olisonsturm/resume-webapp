@@ -9,7 +9,7 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
-    const { profile, updateProfile, fetchProfile } = useProfileStore();
+    const { profile, updateProfile } = useProfileStore();
     const { user } = useAuthStore();
     const [loading, setLoading] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
@@ -28,24 +28,20 @@ export function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     useEffect(() => {
         if (isOpen) {
             setIsVisible(true);
-            if (!profile) {
-                fetchProfile();
-            } else {
-                setFormData({
-                    full_name: profile.full_name || '',
-                    job_title: profile.job_title || '',
-                    email: profile.email || user?.email || '',
-                    phone: profile.phone || '',
-                    address: profile.address || '',
-                    location: profile.location || '',
-                    website: profile.website || '',
-                });
-            }
+            setFormData({
+                full_name: profile?.full_name || '',
+                job_title: profile?.job_title || '',
+                email: profile?.email || user?.email || '',
+                phone: profile?.phone || '',
+                address: profile?.address || '',
+                location: profile?.location || '',
+                website: profile?.website || '',
+            });
         } else {
             const timer = setTimeout(() => setIsVisible(false), 300); // Wait for animation
             return () => clearTimeout(timer);
         }
-    }, [isOpen, profile, user, fetchProfile]);
+    }, [isOpen, profile, user?.email]);
 
     if (!isVisible && !isOpen) return null;
 

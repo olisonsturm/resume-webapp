@@ -12,7 +12,6 @@ import { scrapeLinkedInProfile, parseLinkedInPDF, checkServerHealth } from '../.
 import { populateResumeLogos } from '../../utils/logoUtils';
 import { DocumentPreview } from '../../components/DocumentPreview';
 import { ProfileModal } from '../../components/ProfileModal';
-import { ProfileSetup } from '../../components/ProfileSetup';
 import type { Resume } from '../../types/resume';
 import type { LetterData } from '../../types/letter';
 import './Dashboard.css';
@@ -26,10 +25,7 @@ export function Dashboard() {
     const { letterList, createLetter, createLetterWithData, deleteLetter, duplicateLetter, loadLetter } = useLetterStore();
     const { user, signOut } = useAuthStore();
     const { isCloudEnabled, saveCV, saveLetter, deleteCloudCV, deleteCloudLetter } = useCloudSync();
-    const { profile, fetchProfile, isLoading: isProfileLoading } = useProfileStore();
-
-    // Track if profile setup was completed in this session (avoids re-showing after save)
-    const [profileSetupDone, setProfileSetupDone] = useState(false);
+    const { profile, fetchProfile } = useProfileStore();
 
     const [activeTab, setActiveTab] = useState<ActiveTab>('all');
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -283,19 +279,7 @@ export function Dashboard() {
             ? cvList.map(cv => ({ ...cv, type: 'cv' as const }))
             : letterList.map(l => ({ ...l, type: 'letter' as const }));
 
-    // Check if profile setup is needed (no full_name means first-time user)
-    const needsProfileSetup = !isProfileLoading && !profile?.full_name && !profileSetupDone;
 
-    if (needsProfileSetup) {
-        return (
-            <ProfileSetup
-                onComplete={() => {
-                    setProfileSetupDone(true);
-                    fetchProfile(); // Refresh profile data
-                }}
-            />
-        );
-    }
 
     return (
         <div className="dashboard">
