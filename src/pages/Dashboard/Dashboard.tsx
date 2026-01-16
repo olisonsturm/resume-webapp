@@ -50,7 +50,8 @@ export function Dashboard() {
             setServerStatus(online ? 'online' : 'offline');
         });
         fetchProfile();
-    }, [fetchProfile]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleOpenCV = (id: string) => {
         loadCV(id);
