@@ -19,11 +19,15 @@ function App() {
   const { flushPendingSaves, isLoading } = useCloudSync();
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Load the CV when component mounts
+  // Load the CV when component mounts or ID changes
   useEffect(() => {
     if (isLoading) return; // Wait for cloud sync to finish
 
     if (id) {
+      // Check if we actually need to switch the active CV
+      const currentActiveId = useResumeStore.getState().activeCvId;
+      if (currentActiveId === id) return;
+
       const cvExists = cvList.some(cv => cv.id === id);
       if (cvExists) {
         loadCV(id);
