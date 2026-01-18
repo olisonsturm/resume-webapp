@@ -12,6 +12,7 @@ import { scrapeLinkedInProfile, parseLinkedInPDF, checkServerHealth } from '../.
 import { populateResumeLogos } from '../../utils/logoUtils';
 import { DocumentPreview } from '../../components/DocumentPreview';
 import { ProfileModal } from '../../components/ProfileModal';
+import { ProfileSetup } from '../../components/ProfileSetup';
 import type { Resume } from '../../types/resume';
 import type { LetterData } from '../../types/letter';
 import './Dashboard.css';
@@ -25,7 +26,7 @@ export function Dashboard() {
     const { letterList, createLetter, createLetterWithData, deleteLetter, duplicateLetter, loadLetter } = useLetterStore();
     const { user, signOut } = useAuthStore();
     const { isCloudEnabled, saveCV, saveLetter, deleteCloudCV, deleteCloudLetter } = useCloudSync();
-    const { profile, fetchProfile } = useProfileStore();
+    const { profile, fetchProfile, isLoading: isProfileLoading } = useProfileStore();
 
     const [activeTab, setActiveTab] = useState<ActiveTab>('all');
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -46,7 +47,8 @@ export function Dashboard() {
             setServerStatus(online ? 'online' : 'offline');
         });
         fetchProfile();
-    }, [fetchProfile]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleOpenCV = (id: string) => {
         loadCV(id);
@@ -277,6 +279,19 @@ export function Dashboard() {
         : activeTab === 'cvs'
             ? cvList.map(cv => ({ ...cv, type: 'cv' as const }))
             : letterList.map(l => ({ ...l, type: 'letter' as const }));
+
+    // Check if profile setup is needed (no full_name means first-time user)
+    const needsProfileSetup = !isProfileLoading && !profile?.full_name;
+
+    if (needsProfileSetup) {
+        return (
+            <ProfileSetup
+                onComplete={() => {
+                    fetchProfile(); // Refresh profile data after setup
+                }}
+            />
+        );
+    }
 
     return (
         <div className="dashboard">
